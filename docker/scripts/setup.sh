@@ -4,7 +4,11 @@
 #
 # Prerequisites: docker, docker compose, node
 # Required in .env.docker: DOMAIN, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET
-# Optional in .env.docker: LETSENCRYPT_EMAIL, HTTP_API_PREFIX, LETSENCRYPT_STAGING
+# Optional in .env.docker: LETSENCRYPT_EMAIL, HTTP_API_PREFIX, LETSENCRYPT_STAGING, SKIP_PROXY
+#
+# SKIP_PROXY=1 — the host already runs nginx with HTTPS. Skips the nginx-proxy and
+# certbot containers and renders docker/nginx/host/qprime-locations.conf for the
+# host nginx to include instead.
 
 set -euo pipefail
 
@@ -79,6 +83,7 @@ ok "Required configuration present"
 
 HTTP_API_PREFIX="${HTTP_API_PREFIX:-/api}"
 LETSENCRYPT_STAGING="${LETSENCRYPT_STAGING:-0}"
+SKIP_PROXY="${SKIP_PROXY:-0}"
 
 PROTOCOL="https"
 [ "$DOMAIN" = "localhost" ] && PROTOCOL="http"
@@ -121,7 +126,7 @@ step "Writing .env.docker..."
 # Keys that write_env_file emits. Anything else found in the existing file is
 # preserved verbatim under "# Customization" so users can set vars like
 # RUST_LOG or DOCUMENT_RETENTION_DELAY without losing them on re-run.
-MANAGED_KEYS_RE='^(DOMAIN|LETSENCRYPT_EMAIL|AUTH_GOOGLE_ID|AUTH_GOOGLE_SECRET|HTTP_API_PREFIX|LETSENCRYPT_STAGING|VITE_SINGLE_COURSE_MODE|JWT_PRIVATE_KEY|JWKS|CONVEX_SELF_HOSTED_ADMIN_KEY|VITE_CONVEX_URL|VITE_APP_CONVEX_SITE_URL|VITE_APP_GOOGLE_CLIENT_ID|CONVEX_CLOUD_ORIGIN|CONVEX_SITE_ORIGIN|CONVEX_SITE_URL|SITE_URL|CONVEX_SELF_HOSTED_URL)='
+MANAGED_KEYS_RE='^(DOMAIN|LETSENCRYPT_EMAIL|AUTH_GOOGLE_ID|AUTH_GOOGLE_SECRET|HTTP_API_PREFIX|LETSENCRYPT_STAGING|SKIP_PROXY|VITE_SINGLE_COURSE_MODE|JWT_PRIVATE_KEY|JWKS|CONVEX_SELF_HOSTED_ADMIN_KEY|VITE_CONVEX_URL|VITE_APP_CONVEX_SITE_URL|VITE_APP_GOOGLE_CLIENT_ID|CONVEX_CLOUD_ORIGIN|CONVEX_SITE_ORIGIN|CONVEX_SITE_URL|SITE_URL|CONVEX_SELF_HOSTED_URL)='
 
 write_env_file() {
     local tmp="${ENV_FILE}.tmp"
@@ -145,6 +150,7 @@ HEADER
         echo "# Optional"
         printf 'HTTP_API_PREFIX=%s\n'     "$HTTP_API_PREFIX"
         printf 'LETSENCRYPT_STAGING=%s\n' "$LETSENCRYPT_STAGING"
+        printf 'SKIP_PROXY=%s\n'          "$SKIP_PROXY"
         printf 'VITE_SINGLE_COURSE_MODE=%s\n' "${VITE_SINGLE_COURSE_MODE:-true}"
         echo ""
         echo "# Auto-generated"
@@ -229,9 +235,15 @@ ok "Convex functions deployed"
 # ── Step 12: Build and start all services ──────────────────────────────────────
 
 step "Building and starting services..."
-compose build frontend nginx-proxy
-compose up -d
-ok "All services running"
+if [ "$SKIP_PROXY" = "1" ]; then
+    compose build frontend
+    compose up -d convex-backend convex-dashboard frontend
+    ok "Services running (nginx-proxy and certbot skipped — SKIP_PROXY=1)"
+else
+    compose build frontend nginx-proxy
+    compose up -d
+    ok "All services running"
+fi
 
 # ── Step 13: SSL setup (interactive) ──────────────────────────────────────────
 
@@ -289,19 +301,29 @@ setup_ssl() {
     ok "SSL certificate obtained and nginx reloaded"
 }
 
-step "SSL setup"
-# certbot writes a renewal config only on a successful Let's Encrypt issuance,
-# which distinguishes it from the short-lived self-signed cert used during bootstrap.
-RENEWAL_CONF="$PROJECT_ROOT/docker/certbot/conf/renewal/$DOMAIN.conf"
-if [ -f "$RENEWAL_CONF" ]; then
-    ok "SSL certificate already present for $DOMAIN (delete $RENEWAL_CONF to re-run)"
+if [ "$SKIP_PROXY" = "1" ]; then
+    step "Rendering host nginx config..."
+    HOST_CONF="$DOCKER_DIR/nginx/host/qprime-locations.conf"
+    sed "s|\${HTTP_API_PREFIX}|$HTTP_API_PREFIX|g" "$HOST_CONF.template" > "$HOST_CONF"
+    ok "Wrote $HOST_CONF"
+    log "Include it inside your existing HTTPS server block for $DOMAIN:"
+    log "  include $HOST_CONF;"
+    log "then: sudo nginx -t && sudo systemctl reload nginx"
 else
-    read -rp "  Set up Let's Encrypt SSL certificate? (y/N) " ssl_answer
-    if [ "${ssl_answer:-}" = "y" ] || [ "${ssl_answer:-}" = "Y" ]; then
-        setup_ssl
+    step "SSL setup"
+    # certbot writes a renewal config only on a successful Let's Encrypt issuance,
+    # which distinguishes it from the short-lived self-signed cert used during bootstrap.
+    RENEWAL_CONF="$PROJECT_ROOT/docker/certbot/conf/renewal/$DOMAIN.conf"
+    if [ -f "$RENEWAL_CONF" ]; then
+        ok "SSL certificate already present for $DOMAIN (delete $RENEWAL_CONF to re-run)"
     else
-        log "Skipping SSL — nginx running in HTTP-only mode"
-        log "To enable SSL later: re-run setup.sh and answer Y"
+        read -rp "  Set up Let's Encrypt SSL certificate? (y/N) " ssl_answer
+        if [ "${ssl_answer:-}" = "y" ] || [ "${ssl_answer:-}" = "Y" ]; then
+            setup_ssl
+        else
+            log "Skipping SSL — nginx running in HTTP-only mode"
+            log "To enable SSL later: re-run setup.sh and answer Y"
+        fi
     fi
 fi
 
@@ -317,4 +339,8 @@ echo ""
 echo "  Re-deployment commands:"
 echo "    Convex functions:  ./docker/scripts/deploy-convex.sh"
 echo "    Frontend:          ./docker/scripts/deploy-frontend.sh"
-echo "    All services:      docker compose -f docker/docker-compose.yml --env-file .env.docker up -d"
+if [ "$SKIP_PROXY" = "1" ]; then
+    echo "    All services:      docker compose -f docker/docker-compose.yml --env-file .env.docker up -d convex-backend convex-dashboard frontend"
+else
+    echo "    All services:      docker compose -f docker/docker-compose.yml --env-file .env.docker up -d"
+fi

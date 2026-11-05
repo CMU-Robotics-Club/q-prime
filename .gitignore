@@ -125,4 +125,5 @@ adminSettings.json
 
 # Docker deployment
 docker/certbot/
+docker/nginx/host/qprime-locations.conf
 backups/

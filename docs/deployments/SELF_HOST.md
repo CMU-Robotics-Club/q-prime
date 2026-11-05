@@ -107,6 +107,32 @@ This will:
 - Generate the Convex admin key
 - Update all derived URLs based on your domain
 
+### Already running nginx with HTTPS on this host?
+
+Set `SKIP_PROXY=1` in `.env.docker` before running `setup.sh`. The bundled
+`nginx-proxy` and `certbot` containers are skipped (they would otherwise fight
+your nginx for ports 80/443), and setup renders
+`docker/nginx/host/qprime-locations.conf`. Include it inside your existing
+HTTPS `server` block for the domain, then reload:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name yourdomain.edu;
+    # ...your existing ssl_certificate lines...
+    include /path/to/q-prime/docker/nginx/host/qprime-locations.conf;
+}
+```
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+The included file defines `location /`, so remove any existing `location /` in
+that server block. Skip Step 10 below, and start services with
+`docker compose ... up -d convex-backend convex-dashboard frontend` instead of a
+bare `up -d`.
+
 ## Step 10: Initialize SSL Certificates
 
 ```bash

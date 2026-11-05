@@ -1,0 +1,88 @@
+# Q-Prime routes for an EXISTING host nginx (SKIP_PROXY=1).
+# setup.sh renders this to docker/nginx/host/qprime-locations.conf, substituting
+# ${HTTP_API_PREFIX}. Include the rendered file inside your existing HTTPS server
+# block for this domain:
+#
+#   server {
+#       listen 443 ssl;
+#       server_name yourdomain.edu;
+#       ssl_certificate ...;
+#       include /path/to/q-prime/docker/nginx/host/qprime-locations.conf;
+#   }
+#
+# Mirrors docker/nginx/conf.d/default.conf.template, but targets the ports the
+# containers publish on the host loopback instead of the compose network.
+
+# Per-course theme CSS — Convex HTTP action
+location /_theme/ {
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_pass http://127.0.0.1:3211;
+}
+
+# File transfer — Convex HTTP actions (regex location wins over the prefix ones below)
+location ~ ^${HTTP_API_PREFIX}/(download_|upload_) {
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_pass http://127.0.0.1:3211;
+    proxy_read_timeout 300s;
+    proxy_send_timeout 300s;
+    client_max_body_size 10M;
+}
+
+# OAuth sign-in and callbacks — Convex HTTP actions
+location ${HTTP_API_PREFIX}/auth/ {
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_pass http://127.0.0.1:3211;
+}
+
+# Convex sync API (WebSockets)
+location ${HTTP_API_PREFIX}/ {
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    # Passes "Upgrade" through for WebSocket handshakes without needing an
+    # http-level map in the host's nginx.conf
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $http_connection;
+    proxy_pass http://127.0.0.1:3210;
+    proxy_read_timeout 86400s;
+    proxy_send_timeout 86400s;
+}
+
+# OIDC discovery for Convex Auth JWTs
+location = /.well-known/openid-configuration {
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_pass http://127.0.0.1:3211;
+}
+
+location = /.well-known/jwks.json {
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_pass http://127.0.0.1:3211;
+}
+
+# Frontend (Vite build)
+location / {
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_pass http://127.0.0.1:4000;
+}
