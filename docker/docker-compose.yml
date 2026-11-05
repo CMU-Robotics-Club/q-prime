@@ -16,7 +16,7 @@ services:
   # Convex Backend - Core API Server
   # ===========================================
   convex-backend:
-    image: ghcr.io/get-convex/convex-backend:latest
+    image: ghcr.io/convex/convex-backend:latest
     container_name: qprime-convex-backend
     restart: unless-stopped
     stop_grace_period: 10s
@@ -51,7 +51,7 @@ services:
   # Access via SSH tunnel: ssh -L 6791:localhost:6791 user@server
   # ===========================================
   convex-dashboard:
-    image: ghcr.io/get-convex/convex-dashboard:latest
+    image: ghcr.io/convex/convex-dashboard:latest
     container_name: qprime-convex-dashboard
     restart: unless-stopped
     stop_grace_period: 10s
