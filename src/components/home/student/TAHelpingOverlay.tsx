@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Link, Typography } from '@mui/material';
 import Linkify from 'linkify-react';
+import type { IntermediateRepresentation } from 'linkifyjs';
 
 import { useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
@@ -8,6 +9,17 @@ import { useCourseId } from '../../../contexts/CourseContext';
 
 import DialogShell from '../../common/dialogs/DialogShell';
 import HelpTimer from '../../common/timer/HelpTimer';
+
+// Themed MUI link: the browser-default blue is unreadable on the dark theme.
+const LINKIFY_OPTIONS = {
+  target: '_blank',
+  rel: 'noopener noreferrer',
+  render: ({ attributes, content }: IntermediateRepresentation) => (
+    <Link {...attributes} underline="always" sx={{ wordBreak: 'break-all' }}>
+      {content}
+    </Link>
+  ),
+};
 
 export default function TAHelpingOverlay(props: { open: boolean }) {
   const { open } = props;
@@ -37,7 +49,7 @@ export default function TAHelpingOverlay(props: { open: boolean }) {
         </Typography>
         {studentData?.question && (
           <Typography sx={{ fontSize: 14, color: 'ink.secondary', mb: 2 }}>
-            Part: <Linkify options={{ target: '_blank' }}>{studentData.question}</Linkify>
+            Part: <Linkify options={LINKIFY_OPTIONS}>{studentData.question}</Linkify>
           </Typography>
         )}
         {studentData?.help_start_time_ms && (
