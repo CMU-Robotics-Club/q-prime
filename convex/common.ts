@@ -11,7 +11,7 @@ export async function getGlobalSettings(ctx: QueryCtx, courseId: Id<'courses'>) 
     .withIndex('by_course', (q) => q.eq('course_id', courseId))
     .unique();
   if (!globalSettings) {
-    throw new ConvexError('Global settings not found for course');
+    throw new ConvexError('Global settings not found for event');
   }
   return globalSettings;
 }
@@ -23,7 +23,7 @@ export async function getWaittimePingData(ctx: QueryCtx, courseId: Id<'courses'>
     .unique();
 
   if (!waittimePingData) {
-    throw new ConvexError('Waittime ping data not found for course');
+    throw new ConvexError('Waittime ping data not found for event');
   }
 
   return waittimePingData;
@@ -124,7 +124,7 @@ export async function getWaittimeData(
     total_helped_ms += question.help_duration_ms;
 
     if (!question.ta_id) {
-      throw new ConvexError(`Question helped and finished but no helping ta: ${question}`);
+      throw new ConvexError(`Print request done but has no calling officer: ${question._id}`);
     }
 
     if (!active_tas.has(question.ta_id)) {
@@ -142,14 +142,18 @@ export async function getWaittimeData(
 
   for (const curr_helping of curr_helping_questions) {
     if (!curr_helping.help_start_time_ms) {
-      throw new ConvexError(`Question had being_helped status but no help time: ${curr_helping}`);
+      throw new ConvexError(
+        `Print request is called but has no call start time: ${curr_helping._id}`,
+      );
     }
 
     const helping_ms = now.getTime() - curr_helping.help_start_time_ms;
     total_helped_ms += helping_ms;
 
     if (!curr_helping.helping_ta) {
-      throw new ConvexError(`Question helped but no helping ta: ${curr_helping}`);
+      throw new ConvexError(
+        `Print request is called but has no calling officer: ${curr_helping._id}`,
+      );
     }
 
     if (!active_tas.has(curr_helping.helping_ta.ta_id)) {
@@ -227,11 +231,11 @@ export async function getAssignmentInCourse(
 ) {
   const assignment = await ctx.db.get(assignment_id);
   if (!assignment) {
-    throw new ConvexError('Assignment not found');
+    throw new ConvexError('Machine not found');
   }
   const curr_sem = await getCurrentSemester(ctx, courseId);
   if (assignment.semester_id !== curr_sem._id) {
-    throw new ConvexError('Assignment does not belong to this course');
+    throw new ConvexError('Machine does not belong to this event');
   }
   return assignment;
 }
@@ -325,7 +329,7 @@ export const removeQueueEntry = internalMutation({
           q.status !== 'fixing_question'
         ) {
           throw new ConvexError(
-            'non-frozen student found at the end of the queue with prev_num_frozen > 0',
+            'non-frozen team found at the end of the queue with prev_num_frozen > 0',
           );
         }
 
@@ -347,7 +351,7 @@ export async function getTA(ctx: QueryCtx, sem_user_id: Id<'semesterUsers'>) {
     .first();
 
   if (!ta) {
-    throw new ConvexError('TA not found');
+    throw new ConvexError('Officer not found');
   }
 
   return ta;
@@ -364,13 +368,13 @@ export async function ensureAuthAndTA(
   }
 
   if (user_data.kind !== 'TA') {
-    throw new ConvexError('User is not a TA');
+    throw new ConvexError('User is not an officer');
   }
 
   const ta = await getTA(ctx, user_data.sem_user_id);
 
   if (!ta) {
-    throw new ConvexError('TA not found');
+    throw new ConvexError('Officer not found');
   }
 
   return {
@@ -422,7 +426,7 @@ export async function getStudent(ctx: QueryCtx, sem_user_id: Id<'semesterUsers'>
     .first();
 
   if (!student) {
-    throw new ConvexError('Student not found');
+    throw new ConvexError('Member not found');
   }
 
   return student;
@@ -439,13 +443,13 @@ export async function ensureAuthAndStudent(
   }
 
   if (user_data.kind !== 'student') {
-    throw new ConvexError('User is not a student');
+    throw new ConvexError('User is not a member');
   }
 
   const student = await getStudent(ctx, user_data.sem_user_id);
 
   if (!student) {
-    throw new ConvexError('Student not found');
+    throw new ConvexError('Member not found');
   }
 
   return {
@@ -535,7 +539,7 @@ export const internalEnsureTAOrOwner = internalQuery({
 
     return true;
   },
-})
+});
 
 export const internalEnsureAdmin = internalQuery({
   args: {

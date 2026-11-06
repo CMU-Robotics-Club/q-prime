@@ -79,19 +79,21 @@ http.route({
     });
 
     if (!is_ta) {
-      throw new Error('User is not a TA');
+      throw new Error('User is not an officer');
     }
 
+    // Machines template. Uploads still accept an optional assignment_type column.
     const csvContent = [
-      'name,assignment_type,start_date,end_date',
-      'Example Written,Written,8/5/22 9:00 PM,8/12/22 9:00 PM',
+      'name,start_date,end_date',
+      '3D Printer,11/7/26 9:00 AM,11/8/26 6:00 PM',
+      'Laser Cutter,11/7/26 9:00 AM,11/8/26 6:00 PM',
     ].join('\n');
 
     return new Response(csvContent, {
       status: 200,
       headers: createCorsHeaders({
         'Content-Type': 'text/csv',
-        'Content-Disposition': `attachment; filename="assignments_example.csv"`,
+        'Content-Disposition': `attachment; filename="machines_example.csv"`,
       }),
     });
   }),
@@ -123,16 +125,17 @@ http.route({
     });
 
     if (!is_ta) {
-      throw new Error('User is not a TA or Owner');
+      throw new Error('User is not an officer or owner');
     }
 
-    const csvContent = ['name,email,is_admin', 'Example TA,ta@andrew.cmu.edu,false'].join('\n');
+    const csvRows = ['name,email,is_admin', 'Example Officer,officer@andrew.cmu.edu,false'];
+    const csvContent = csvRows.join('\n');
 
     return new Response(csvContent, {
       status: 200,
       headers: createCorsHeaders({
         'Content-Type': 'text/csv',
-        'Content-Disposition': `attachment; filename="tas_example.csv"`,
+        'Content-Disposition': `attachment; filename="officers_example.csv"`,
       }),
     });
   }),
@@ -164,7 +167,7 @@ http.route({
     });
 
     if (!is_ta) {
-      throw new Error('User is not a TA');
+      throw new Error('User is not an officer');
     }
 
     const csvContent = [
@@ -251,7 +254,7 @@ http.route({
     const csvContent = lines.join('\r\n');
 
     const safeSemName = semesterName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'semester';
-    const filename = `questions_${safeSemName}.csv`;
+    const filename = `print_requests_${safeSemName}.csv`;
 
     return new Response(csvContent, {
       status: 200,
@@ -289,7 +292,7 @@ http.route({
     });
 
     if (!is_ta) {
-      throw new Error('User is not a TA');
+      throw new Error('User is not an officer');
     }
 
     const blob = await request.blob();
@@ -374,7 +377,7 @@ http.route({
     });
 
     if (!is_ta) {
-      throw new Error('User is not a TA or Owner');
+      throw new Error('User is not an officer or owner');
     }
 
     const blob = await request.blob();
@@ -430,7 +433,7 @@ http.route({
     });
 
     if (!is_ta) {
-      throw new Error('User is not a TA');
+      throw new Error('User is not an officer');
     }
 
     const blob = await request.blob();

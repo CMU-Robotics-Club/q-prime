@@ -132,6 +132,12 @@ export const deleteAnnouncement = mutation({
 // Keep in sync with the Part field's maxLength in AskQuestion.tsx.
 const MAX_PART_LENGTH = 1000;
 
+// Label for a queue entry in notifications. Entries created before team
+// numbers existed fall back to the member's name.
+function entryLabel(entry: { team_number?: number; student_name: string }) {
+  return entry.team_number !== undefined ? `Team ${entry.team_number}` : entry.student_name;
+}
+
 export const addQuestion = mutation({
   args: {
     courseId: v.id('courses'),
@@ -154,7 +160,7 @@ export const addQuestion = mutation({
   handler: async (ctx, args) => {
     const user_data = await getCurrentUser(ctx, args.courseId);
     if (!user_data) {
-      throw new ConvexError('User not authenticated for this course');
+      throw new ConvexError('User not authenticated for this event');
     }
     const curr_sem = await getCurrentSemester(ctx, args.courseId);
 
@@ -173,7 +179,7 @@ export const addQuestion = mutation({
     // Handle TA created questions
     if (user_data.kind === 'TA') {
       if (!args.email) {
-        throw new ConvexError('TA created questions must have an email');
+        throw new ConvexError('Enter a member email to add a team to the queue');
       }
 
       const existing_user = await ctx.db
@@ -253,7 +259,7 @@ export const addQuestion = mutation({
       }
 
       if (!student) {
-        throw new ConvexError('Student not found');
+        throw new ConvexError('Member not found');
       }
 
       // enqueue student
@@ -261,7 +267,7 @@ export const addQuestion = mutation({
       const existing_entry = await getQueueEntry(ctx, args.courseId, student._id);
 
       if (existing_entry) {
-        throw new ConvexError('Student already on the queue');
+        throw new ConvexError('This member already has a print request on the queue');
       }
 
       const user = (await ctx.db.get(student.user_id))!;
@@ -315,7 +321,7 @@ export const addQuestion = mutation({
       const existing_entry = await getQueueEntry(ctx, args.courseId, student._id);
 
       if (existing_entry) {
-        throw new ConvexError('Student already on the queue');
+        throw new ConvexError('You already have a print request on the queue');
       }
 
       // Whitelist/blacklist are stored as arrays of email strings
@@ -331,13 +337,13 @@ export const addQuestion = mutation({
 
       if (curr_sem.enable_whitelist) {
         if (!curr_sem.whitelist.includes(student_email)) {
-          throw new ConvexError('Student is not on the whitelist');
+          throw new ConvexError('Member is not on the whitelist');
         }
       }
 
       if (curr_sem.enable_blacklist) {
         if (curr_sem.blacklist.includes(student_email)) {
-          throw new ConvexError('Student is on the blacklist');
+          throw new ConvexError('Member is on the blacklist');
         }
       }
 
@@ -474,10 +480,10 @@ export const removeStudent = mutation({
       const student = (await getStudent(ctx, user_data.sem_user_id))!;
 
       if (args.student_id !== student._id) {
-        throw new ConvexError('Student is not removing themselves');
+        throw new ConvexError('You can only remove your own print request');
       }
     } else if (user_data.kind !== 'TA') {
-      throw new ConvexError('User is not a student or TA');
+      throw new ConvexError('User is not a member or officer');
     }
 
     // remove from OHQ
@@ -497,17 +503,17 @@ export const removeStudent = mutation({
 
     if (args.reason === 'helped') {
       if (user_data.kind !== 'TA') {
-        throw new ConvexError('Removing user is not a TA but reason is helped');
+        throw new ConvexError('Only officers can mark a print request as done');
       }
       if (existing_entry.status !== 'being_helped') {
-        throw new ConvexError('Student is not being helped but reason is helped');
+        throw new ConvexError('This team has not been called yet, so it cannot be marked done');
       }
       if (existing_entry.help_start_time_ms === undefined) {
-        throw new ConvexError('Student is being helped but help start time is undefined');
+        throw new ConvexError('This team was called but has no call start time');
       }
       if (existing_entry.helping_ta!.ta_id !== removal_ta!._id) {
         throw new ConvexError(
-          'Student is being helped by a different TA than the one removing them, but reason is helped',
+          'This team was called by a different officer; only that officer can mark it done',
         );
       }
     }
@@ -550,8 +556,8 @@ export const removeStudent = mutation({
       // notify the TA
       await ctx.runMutation(internal.common.internalSendNotification, {
         semester_user: removal_ta!.semester_user_id,
-        title: 'Done Helping!',
-        body: `You helped ${existing_entry.student_name} for ${help_duration_mins_rounded} minutes`,
+        title: 'Print request done!',
+        body: `You were with ${entryLabel(existing_entry)} for ${help_duration_mins_rounded} minutes`,
       });
     }
   },
@@ -569,7 +575,7 @@ export const helpStudent = mutation({
     const existing_entry = (await getQueueEntry(ctx, args.courseId, student_to_help._id))!;
 
     if (existing_entry.helping_ta !== undefined || existing_entry.status === 'being_helped') {
-      throw new ConvexError('Student is already being helped');
+      throw new ConvexError('This team has already been called');
     }
 
     const ta_prefs = (await ctx.db.get(ta.user_prefs_id))!;
@@ -588,8 +594,8 @@ export const helpStudent = mutation({
     // notify the student
     await ctx.runMutation(internal.common.internalSendNotification, {
       semester_user: student_to_help.semester_user_id,
-      title: "It's your turn to get help!",
-      body: `${ta_prefs.preferred_name} is ready to help you.`,
+      title: "It's your team's turn!",
+      body: `${ta_prefs.preferred_name} is ready for your team.`,
     });
 
     // notify the TA in the future at their remind time if they have reminders enabled
@@ -600,7 +606,7 @@ export const helpStudent = mutation({
         ta_helping: ta._id,
         student_helping: student_to_help._id,
         title: 'Time Alert!',
-        body: `You've been helping for ${ta.remind_time_mins} minutes!`,
+        body: `It's been ${ta.remind_time_mins} minutes since you called ${entryLabel(existing_entry)}.`,
       });
     }
   },
@@ -652,11 +658,11 @@ export const unhelpStudent = mutation({
     const existing_entry = (await getQueueEntry(ctx, args.courseId, student_to_unhelp._id))!;
 
     if (existing_entry.status !== 'being_helped') {
-      throw new ConvexError('Student is not being helped');
+      throw new ConvexError('This team has not been called');
     }
 
     if (existing_entry.helping_ta?.ta_id !== ta._id) {
-      throw new ConvexError('TA is not helping this student');
+      throw new ConvexError('You did not call this team');
     }
 
     await ctx.db.patch(existing_entry._id, {
@@ -731,7 +737,7 @@ export const messageStudent = mutation({
     const existing_entry = (await getQueueEntry(ctx, args.courseId, args.student_id))!;
 
     if (existing_entry.status === 'being_helped') {
-      throw new ConvexError('You cannot message a student while they are being helped');
+      throw new ConvexError('You cannot message a team after it has been called');
     }
 
     const ta_prefs = (await ctx.db.get(ta.user_prefs_id))!;
@@ -754,7 +760,7 @@ export const messageStudent = mutation({
     // notify the student
     await ctx.runMutation(internal.common.internalSendNotification, {
       semester_user: student_sem_user,
-      title: "You've been messaged by a TA",
+      title: "You've been messaged by an officer",
       body: '',
     });
   },
@@ -792,7 +798,7 @@ export const approveCooldownOverride = mutation({
     }
 
     if (existing_entry.status !== 'cooldown_violation') {
-      throw new ConvexError('Student is not on cooldown violation');
+      throw new ConvexError('This team is not in a cooldown violation');
     }
 
     await ctx.db.patch(existing_entry._id, {
@@ -804,7 +810,7 @@ export const approveCooldownOverride = mutation({
     // notify the student
     await ctx.runMutation(internal.common.internalSendNotification, {
       semester_user: student_sem_user,
-      title: 'Your entry has been approved by a TA',
+      title: 'Your print request has been approved by an officer',
       body: '',
     });
   },
@@ -840,7 +846,7 @@ export const internalWaittimeIntervalCheck = internalMutation({
 
         await ctx.scheduler.runAfter(0, internal.actions.sendSlackbotMessage, {
           courseId: args.courseId,
-          message: `<!channel> The wait time is ${wait_time_mins_rounded} minutes right now. More TAs might be needed.`,
+          message: `<!channel> The print queue wait time is ${wait_time_mins_rounded} minutes right now. More officers might be needed.`,
         });
 
         // update the last pinged time
