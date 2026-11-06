@@ -797,6 +797,23 @@ export const deleteTA = mutation({
         kind: 'student',
       });
       await ctx.db.delete(ta._id);
+
+      // users who were TAs from the start never got a student entry
+      const existing_student = await ctx.db
+        .query('students')
+        .withIndex('by_semuser', (x) => x.eq('semester_user_id', sem_user._id))
+        .first();
+
+      if (!existing_student) {
+        await ctx.db.insert('students', {
+          user_id: user._id,
+          user_prefs_id: sem_user.user_prefs_id,
+          semester_user_id: sem_user._id,
+          num_questions: 0,
+          time_on_queue_ms: 0,
+          num_asked_to_fix: 0,
+        });
+      }
     }
   },
 });
