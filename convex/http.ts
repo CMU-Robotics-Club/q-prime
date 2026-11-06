@@ -27,6 +27,8 @@ function createCorsHeaders(additionalHeaders: Record<string, string> = {}) {
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Max-Age': '86400', // 24 hours
+    // Let the frontend read the CSV download filename cross-origin.
+    'Access-Control-Expose-Headers': 'Content-Disposition',
     ...additionalHeaders,
   };
 }
