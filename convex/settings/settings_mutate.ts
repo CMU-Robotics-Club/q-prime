@@ -113,7 +113,7 @@ export const updateCourseName = mutation({
     await ensureAuthAndAdmin(ctx, args.courseId);
 
     if (!args.courseName) {
-      throw new ConvexError('Course name cannot be empty');
+      throw new ConvexError('Event name cannot be empty');
     }
 
     const globalSettings = await getGlobalSettings(ctx, args.courseId);
@@ -653,7 +653,7 @@ export const createTA = mutation({
         .first();
 
       if (existing_future_ta) {
-        throw new ConvexError('Future TA already exists');
+        throw new ConvexError('That officer has already been added');
       }
 
       await ctx.db.insert('future_tas', {
@@ -716,7 +716,7 @@ export const updateTA = mutation({
         .first();
 
       if (!sem_user) {
-        throw new ConvexError('TA user exists but does not have a sem_user entry');
+        throw new ConvexError('Officer user exists but does not have a sem_user entry');
       }
 
       const ta = await ctx.db
@@ -725,7 +725,7 @@ export const updateTA = mutation({
         .first();
 
       if (!ta) {
-        throw new ConvexError('TA user exists but does not have a ta entry');
+        throw new ConvexError('Officer user exists but does not have an officer entry');
       }
 
       await ctx.db.patch(ta._id, {
@@ -781,7 +781,7 @@ export const deleteTA = mutation({
         .first();
 
       if (!sem_user) {
-        throw new ConvexError('TA user exists but does not have a sem_user entry');
+        throw new ConvexError('Officer user exists but does not have a sem_user entry');
       }
 
       const ta = await ctx.db
@@ -790,7 +790,7 @@ export const deleteTA = mutation({
         .first();
 
       if (!ta) {
-        throw new ConvexError('TA user exists but does not have a ta entry');
+        throw new ConvexError('Officer user exists but does not have an officer entry');
       }
 
       await ctx.db.patch(sem_user._id, {

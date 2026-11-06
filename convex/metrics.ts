@@ -920,7 +920,7 @@ export const internalGetQuestionsCsvDump = internalQuery({
       )
       .first();
     if (!sem_user) {
-      throw new ConvexError('User is not enrolled in this course');
+      throw new ConvexError('User is not enrolled in this event');
     }
 
     const ta = await ctx.db
