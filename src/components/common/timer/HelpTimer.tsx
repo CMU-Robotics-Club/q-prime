@@ -9,12 +9,10 @@ export type HelpTimerProps = {
   /** Externally tracked elapsed milliseconds. When provided, overrides self-ticking. */
   elapsedMs?: number;
   className?: string;
-  /** When provided, renders a "{preferred_name} helping" label above the timer.
+  /** When provided, renders a "Called by {preferred_name}" label above the timer.
    *  Omit it (self-timer, student overlay) to show just the timer chip. */
   helpingTa?: {
-    zoom_url?: string | undefined;
     preferred_name: string;
-    zoom_enabled: boolean;
     ta_id: Id<'tas'>;
   };
 };
@@ -76,7 +74,7 @@ export default function HelpTimer(props: HelpTimerProps): JSX.Element {
     <>
       {helpingTa && (
         <Typography variant="body2" color="text.secondary">
-          {helpingTa.preferred_name} helping
+          Called by {helpingTa.preferred_name}
         </Typography>
       )}
       <Root className={className}>

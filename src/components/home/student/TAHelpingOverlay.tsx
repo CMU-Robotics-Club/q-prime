@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Link, Typography } from '@mui/material';
+import Linkify from 'linkify-react';
+import type { IntermediateRepresentation } from 'linkifyjs';
 
 import { useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
@@ -7,6 +9,17 @@ import { useCourseId } from '../../../contexts/CourseContext';
 
 import DialogShell from '../../common/dialogs/DialogShell';
 import HelpTimer from '../../common/timer/HelpTimer';
+
+// Themed MUI link: the browser-default blue is unreadable on the dark theme.
+const LINKIFY_OPTIONS = {
+  target: '_blank',
+  rel: 'noopener noreferrer',
+  render: ({ attributes, content }: IntermediateRepresentation) => (
+    <Link {...attributes} underline="always" sx={{ wordBreak: 'break-all' }}>
+      {content}
+    </Link>
+  ),
+};
 
 export default function TAHelpingOverlay(props: { open: boolean }) {
   const { open } = props;
@@ -20,28 +33,27 @@ export default function TAHelpingOverlay(props: { open: boolean }) {
     if (!open) setDismissed(false);
   }, [open]);
 
-  const taName = studentData?.helping_ta?.preferred_name || '';
-  const zoomUrl = studentData?.helping_ta?.zoom_enabled ? studentData?.helping_ta?.zoom_url : null;
+  const officerName = studentData?.helping_ta?.preferred_name;
+  const machineName = studentData?.assignment_name;
 
   return (
     <DialogShell
       open={open && !dismissed}
       onClose={() => setDismissed(true)}
-      title={`${taName} is helping you`}
-      primaryAction={
-        zoomUrl
-          ? {
-              label: 'Open Zoom',
-              onClick: () => window.open(zoomUrl, '_blank', 'noopener'),
-            }
-          : undefined
-      }
+      title={`${officerName || 'An officer'} is ready for your team`}
       secondaryAction={{ label: 'Got it', onClick: () => setDismissed(true) }}
     >
       <Box>
         <Typography sx={{ fontSize: 14, color: 'ink.primary', mb: 2 }}>
-          {studentData?.question || ''}
+          {/* There can be several of each machine, so don't point the team at one. */}
+          Your {machineName ? <b>{machineName}</b> : 'print'} request is up. Come find{' '}
+          {officerName || 'an officer'} to get started.
         </Typography>
+        {studentData?.question && (
+          <Typography sx={{ fontSize: 14, color: 'ink.secondary', mb: 2 }}>
+            Part: <Linkify options={LINKIFY_OPTIONS}>{studentData.question}</Linkify>
+          </Typography>
+        )}
         {studentData?.help_start_time_ms && (
           <HelpTimer startTime={studentData.help_start_time_ms} />
         )}
