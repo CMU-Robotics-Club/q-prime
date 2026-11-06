@@ -46,7 +46,7 @@ export default function TAHelpingOverlay(props: { open: boolean }) {
       <Box>
         <Typography sx={{ fontSize: 14, color: 'ink.primary', mb: 2 }}>
           {/* There can be several of each machine, so don't point the team at one. */}
-          Your {machineName ? <b>{machineName}</b> : 'print'} request is up — come find{' '}
+          Your {machineName ? <b>{machineName}</b> : 'print'} request is up. Come find{' '}
           {officerName || 'an officer'} to get started.
         </Typography>
         {studentData?.question && (
