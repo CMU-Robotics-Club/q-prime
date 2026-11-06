@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Stack, Typography } from '@mui/material';
-import { Help, Chat, Delete } from '@mui/icons-material';
+import { Chat, Delete } from '@mui/icons-material';
 
 import { useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
@@ -26,7 +26,6 @@ export default function EntryTails(props) {
     handleCancel,
     removeStudent,
     handleClickUnfreeze,
-    handleFix,
     approveCooldownOverride,
   } = props;
   const student: Doc<'ohq'> = props['student'];
@@ -52,11 +51,6 @@ export default function EntryTails(props) {
   const overflowItems: OverflowMenuItem[] = [];
 
   if (status === 'waiting' || status === 'fixing_question') {
-    overflowItems.push({
-      icon: <Help fontSize="small" />,
-      label: 'Ask to fix',
-      onClick: () => handleFix(index),
-    });
     overflowItems.push({
       icon: <Chat fontSize="small" />,
       label: 'Message',
@@ -97,10 +91,10 @@ export default function EntryTails(props) {
         actionElement = (
           <>
             <Typography variant="body2" color="text.secondary">
-              {student.helping_ta?.preferred_name} helping
+              Called by {student.helping_ta?.preferred_name}
             </Typography>
           </>
-        )
+        );
       }
       break;
     case 'frozen':
@@ -119,12 +113,11 @@ export default function EntryTails(props) {
             showCooldownApproval ? approveCooldownOverride() : handleClickHelp(index)
           }
         >
-          {showCooldownApproval ? 'Approve' : 'Help'}
+          {showCooldownApproval ? 'Approve' : 'Call'}
         </OhqButton>
       );
       break;
     case 'waiting':
-    case 'fixing_question':
     default:
       actionElement = (
         <OhqButton
@@ -132,7 +125,7 @@ export default function EntryTails(props) {
           disabled={isHelping || tempDisabled}
           onClick={() => handleClickHelp(index)}
         >
-          Help
+          Call
         </OhqButton>
       );
       break;
@@ -153,7 +146,7 @@ export default function EntryTails(props) {
       <DialogShell
         open={openRemoveConfirm}
         onClose={() => setOpenRemoveConfirm(false)}
-        title="Remove this student?"
+        title="Remove this team?"
         primaryAction={{
           label: 'Remove',
           variant: 'danger',

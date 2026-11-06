@@ -34,7 +34,7 @@ export default function MessageDialog(props) {
     <DialogShell
       open={isOpen}
       onClose={onClose}
-      title={`Send a note to ${student.student_name}`}
+      title={`Send a message to ${student.student_name}`}
       primaryAction={{ label: 'Send', type: 'submit', formId: FORM_ID }}
       secondaryAction={{ label: 'Cancel', onClick: onClose }}
     >

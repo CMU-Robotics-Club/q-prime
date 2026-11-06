@@ -30,7 +30,13 @@ const TIMEZONE_SUGGESTIONS = [
   'Pacific/Auckland',
 ];
 
-function SectionHeader({ children, first = false }: { children: React.ReactNode; first?: boolean }) {
+function SectionHeader({
+  children,
+  first = false,
+}: {
+  children: React.ReactNode;
+  first?: boolean;
+}) {
   return (
     <>
       {first ? null : <Divider sx={{ my: 2 }} />}
@@ -51,7 +57,6 @@ export default function ConfigSettings() {
   const adminSettings = useQuery(api.settings.settings_get.getQueueSettings, { courseId });
 
   const [slackURL, setSlackURL] = useState('');
-  const [questionsURL, setQuestionsURL] = useState('');
   const [allowedEmailDomains, setAllowedEmailDomains] = useState<string[]>([]);
   const [enforceEmailDomain, setEnforceEmailDomain] = useState(true);
   const [allowCDOverride, setAllowCDOverride] = useState(true);
@@ -79,7 +84,6 @@ export default function ConfigSettings() {
   useEffect(() => {
     if (queueData) {
       setAllowCDOverride(queueData.allow_cooldown_override);
-      setQuestionsURL(queueData.questions_policy_url || '');
     }
   }, [queueData]);
 
@@ -96,11 +100,11 @@ export default function ConfigSettings() {
     adminLoaded && enforceEmailDomain !== adminSettings?.enforceEmailDomains;
   const allowedDomainsDirty =
     adminLoaded &&
-    JSON.stringify(allowedEmailDomains) !== JSON.stringify(adminSettings?.allowedEmailDomains ?? []);
+    JSON.stringify(allowedEmailDomains) !==
+      JSON.stringify(adminSettings?.allowedEmailDomains ?? []);
   const allowCDOverrideDirty =
     queueLoaded && allowCDOverride !== queueData?.allow_cooldown_override;
   const slackURLDirty = adminLoaded && slackURL !== (adminSettings?.slackURL ?? '');
-  const questionsURLDirty = queueLoaded && questionsURL !== (queueData?.questions_policy_url ?? '');
   const allowShowOthersTimerDirty =
     adminLoaded && allowShowOthersTimer !== adminSettings?.allowShowOthersTimer;
 
@@ -112,11 +116,6 @@ export default function ConfigSettings() {
   const updateSlackURLMutation = useMutation(api.settings.settings_mutate.updateSlackURL);
   const handleUpdateSlackURL = async () => {
     await updateSlackURLMutation({ courseId, slackURL });
-  };
-
-  const updateQuestionsURLMutation = useMutation(api.settings.settings_mutate.updateQuestionsURL);
-  const handleUpdateQuestionsURL = async () => {
-    await updateQuestionsURLMutation({ courseId, questionsURL });
   };
 
   const updateAllowedEmailDomainsMutation = useMutation(
@@ -202,15 +201,15 @@ export default function ConfigSettings() {
         </Typography>
 
         <Typography color="text.secondary" sx={{ mt: 1 }}>
-          The current semester is {adminSettings?.currSem}. Only [
-          {adminSettings?.ownerEmails || []}] can change the semester.
+          The current semester is {adminSettings?.currSem}. Only [{adminSettings?.ownerEmails || []}
+          ] can change the semester.
         </Typography>
 
-        <SectionHeader first>Course</SectionHeader>
+        <SectionHeader first>Event</SectionHeader>
 
         <SettingRow
-          label="Course Name"
-          description="Display name for the course"
+          label="Event Name"
+          description="Display name for the event"
           dirty={courseNameDirty}
           onSave={handleUpdateCourseName}
         >
@@ -336,7 +335,7 @@ export default function ConfigSettings() {
 
         <SettingRow
           label="Allow Cooldown Override"
-          description="Allow students to override cooldown"
+          description="Allow teams to override cooldown"
           dirty={allowCDOverrideDirty}
           onSave={handleCooldownOverrideEnabled}
         >
@@ -364,26 +363,11 @@ export default function ConfigSettings() {
           />
         </SettingRow>
 
-        <SettingRow
-          label="Questions Guide URL"
-          description="Link shown to students when Asked to Fix"
-          dirty={questionsURLDirty}
-          onSave={handleUpdateQuestionsURL}
-        >
-          <TextField
-            size="small"
-            value={questionsURL ?? ''}
-            onChange={(e) => setQuestionsURL(e.target.value)}
-            placeholder="https://..."
-            sx={{ width: 320 }}
-          />
-        </SettingRow>
-
-        <SectionHeader>TA permissions</SectionHeader>
+        <SectionHeader>Officer permissions</SectionHeader>
 
         <SettingRow
-          label="Show Others' Helping Time"
-          description="Allow TAs to see how long other TAs have been helping students"
+          label="Show Others' Call Timers"
+          description="Allow officers to see how long teams called by other officers have been called"
           dirty={allowShowOthersTimerDirty}
           onSave={handleUpdateAllowShowOthersTimer}
         >

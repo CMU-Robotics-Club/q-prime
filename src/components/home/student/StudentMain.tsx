@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react';
 import YourEntry from './YourEntry';
 import RemoveQOverlay from './RemoveQConfirm';
 import TAHelpingOverlay from './TAHelpingOverlay';
-import UpdateQuestionOverlay from './UpdateQuestionOverlay';
 import MessageOverlay from './MessageOverlay';
 import AskQuestion from '../shared/AskQuestion';
 
@@ -60,16 +59,9 @@ function StudentMain() {
 
       <TAHelpingOverlay open={studentData?.status === 'being_helped'} />
 
-      <UpdateQuestionOverlay
-        open={studentData?.status === 'fixing_question'}
-        handleClose={() => {}}
-      />
-
       <MessageOverlay
         open={studentData?.has_unread_messages ?? false}
-        removeFromQueue={removeFromQueue}
         dismissMessage={dismissMessage}
-        handleClose={() => {}}
       />
     </div>
   );

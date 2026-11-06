@@ -129,7 +129,6 @@ export default function StudentEntries() {
   }, [filteredLocations, filteredTopics, setFilteredLocations, setFilteredTopics]);
   const helpStudentMutation = useMutation(api.home.home_mutate.helpStudent);
   const unhelpStudentMutation = useMutation(api.home.home_mutate.unhelpStudent);
-  const askToFixQuestionMutation = useMutation(api.home.home_mutate.askToFixQuestion);
   const removeStudentMutation = useMutation(api.home.home_mutate.removeStudent);
 
   const handleClickHelp = async (index) => {
@@ -154,17 +153,6 @@ export default function StudentEntries() {
     });
   };
 
-  const handleFix = async (index) => {
-    setTempDisabled(true);
-
-    await askToFixQuestionMutation({
-      courseId,
-      student_id: filteredStudents[index].student_id,
-    }).finally(() => {
-      setTempDisabled(false);
-    });
-  };
-
   // used for both removing and done helping
   const removeStudent = async (index, doneHelping) => {
     setTempDisabled(true);
@@ -181,7 +169,7 @@ export default function StudentEntries() {
   const handleClickUnfreeze = (_index) => {};
 
   return (
-    <ListCard title="Students" HeaderTailComp={FilterWithProps}>
+    <ListCard title="Teams" HeaderTailComp={FilterWithProps}>
       {filteredStudents.map((student, index) => (
         <StudentEntry
           isHelping={isHelping}
@@ -191,7 +179,6 @@ export default function StudentEntries() {
           index={index}
           handleClickHelp={handleClickHelp}
           handleCancel={handleCancel}
-          handleFix={handleFix}
           removeStudent={removeStudent}
           handleClickUnfreeze={handleClickUnfreeze}
           currentTime={currentTime}

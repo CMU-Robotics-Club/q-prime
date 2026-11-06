@@ -127,7 +127,7 @@ function TAMetricsContent() {
         </Button>
 
         <Typography variant="h5" sx={{ my: 2 }} fontWeight="bold">
-          Questions Answered: {taHistory.taName}
+          Requests Handled: {taHistory.taName}
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
           {taHistory.taEmail}
@@ -145,7 +145,7 @@ function TAMetricsContent() {
           >
             <Grid sx={{ textAlign: 'center' }}>
               <Typography variant="h6" fontWeight="bold">
-                Total Questions Answered
+                Total Requests Handled
               </Typography>
               <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
                 {taHistory.totalQuestionsAnswered}
@@ -153,7 +153,7 @@ function TAMetricsContent() {
             </Grid>
             <Grid sx={{ textAlign: 'center' }}>
               <Typography variant="h6" fontWeight="bold">
-                Total Time Helping
+                Total Call Time
               </Typography>
               <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
                 {taHistory.totalTimeHelping}
@@ -161,7 +161,7 @@ function TAMetricsContent() {
             </Grid>
             <Grid sx={{ textAlign: 'center' }}>
               <Typography variant="h6" fontWeight="bold">
-                Avg. Time Per Question
+                Avg. Time Per Request
               </Typography>
               <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
                 {taHistory.avgTimePerQuestion}
@@ -173,21 +173,20 @@ function TAMetricsContent() {
         {/* Question History Table */}
         <Card>
           <Typography variant="h6" sx={{ m: 2 }} fontWeight="bold">
-            All Questions Answered ({taHistory.questions.length})
+            All Requests Handled ({taHistory.questions.length})
           </Typography>
           <TableContainer sx={{ maxHeight: 600 }}>
-            <Table stickyHeader aria-label="question history table">
+            <Table stickyHeader aria-label="print request history table">
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ minWidth: 150 }}>Date/Time</TableCell>
-                  <TableCell sx={{ minWidth: 120 }}>Student</TableCell>
+                  <TableCell sx={{ minWidth: 120 }}>Member</TableCell>
                   <TableCell sx={{ minWidth: 120 }}>Email</TableCell>
-                  <TableCell sx={{ minWidth: 120 }}>Assignment</TableCell>
-                  <TableCell sx={{ minWidth: 200 }}>Question</TableCell>
+                  <TableCell sx={{ minWidth: 120 }}>Machine</TableCell>
+                  <TableCell sx={{ minWidth: 200 }}>Part</TableCell>
                   <TableCell sx={{ minWidth: 100 }}>Location</TableCell>
                   <TableCell sx={{ minWidth: 80 }}>Wait (min)</TableCell>
-                  <TableCell sx={{ minWidth: 80 }}>Help (min)</TableCell>
-                  <TableCell sx={{ minWidth: 80 }}>Ask to Fix</TableCell>
+                  <TableCell sx={{ minWidth: 80 }}>Call (min)</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -225,7 +224,6 @@ function TAMetricsContent() {
                       <TableCell sx={{ wordBreak: 'break-word' }}>{row.location}</TableCell>
                       <TableCell>{row.wait_time_mins}</TableCell>
                       <TableCell>{row.help_duration_mins}</TableCell>
-                      <TableCell>{row.num_asked_to_fix}</TableCell>
                     </TableRow>
                   ))}
               </TableBody>

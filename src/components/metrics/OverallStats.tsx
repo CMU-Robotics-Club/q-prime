@@ -7,12 +7,10 @@ import { useCourseId } from '../../contexts/CourseContext';
 export default function OverallStats() {
   const courseId = useCourseId();
   const numQuestionsTodayData = useQuery(api.metrics.getNumQuestionsToday, { courseId });
-  const numBadQuestionsData = useQuery(api.metrics.getNumBadQuestionsToday, { courseId });
   const avgWaitTimeData = useQuery(api.metrics.getAvgWaitTimeToday, { courseId });
   const taStudentRatioData = useQuery(api.metrics.getTaStudentRatioToday, { courseId });
 
   const numQuestionsToday = numQuestionsTodayData ? numQuestionsTodayData.numQuestionsToday : 0;
-  const numBadQuestions = numBadQuestionsData ? numBadQuestionsData.numBadQuestionsToday : 0;
   const avgWaitTime = avgWaitTimeData ? avgWaitTimeData.avgWaitTime : '0:00';
   const taStudentRatio = taStudentRatioData ? taStudentRatioData.taStudentRatio : '0:0';
 
@@ -35,19 +33,10 @@ export default function OverallStats() {
       >
         <Grid sx={{ px: 4, py: 4, alignItems: 'center', textAlign: 'center' }}>
           <Typography variant="h6" fontWeight="bold">
-            Number of Questions
+            Number of Print Requests
           </Typography>
           <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
             {numQuestionsToday}
-          </Typography>
-        </Grid>
-        <Divider orientation="vertical" variant="middle" flexItem />
-        <Grid sx={{ px: 4, py: 4, alignItems: 'center', textAlign: 'center' }}>
-          <Typography variant="h6" fontWeight="bold">
-            Number of Bad Questions
-          </Typography>
-          <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
-            {numBadQuestions}
           </Typography>
         </Grid>
         <Divider orientation="vertical" variant="middle" flexItem />
@@ -62,7 +51,7 @@ export default function OverallStats() {
         <Divider orientation="vertical" variant="middle" flexItem />
         <Grid sx={{ px: 4, py: 4, alignItems: 'center', textAlign: 'center' }}>
           <Typography variant="h6" fontWeight="bold">
-            TA:Student Ratio
+            Officer:Member Ratio
           </Typography>
           <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
             {taStudentRatio}
