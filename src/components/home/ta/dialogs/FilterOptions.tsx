@@ -46,7 +46,7 @@ export default function FilterOptions(props) {
 
   const queueData = useQuery(api.home.home_get.getQueueData, { courseId });
   const rawLocations = queueData?.current_locations || [];
-  const locations = rawLocations.length === 0 ? ['Office Hours'] : rawLocations;
+  const locations = rawLocations.length === 0 ? ['RoboClub'] : rawLocations;
   const currAssignments = queueData?.current_assignments || [];
 
   const handleToggle = (group, value) => () => {
@@ -102,7 +102,7 @@ export default function FilterOptions(props) {
       <List
         sx={{ width: '100%', maxWidth: 320, bgcolor: 'paper.1', py: 0 }}
         component="nav"
-        subheader={<ListSubheader sx={subheaderSx}>Topics</ListSubheader>}
+        subheader={<ListSubheader sx={subheaderSx}>Machines</ListSubheader>}
       >
         {currAssignments.map((topic) => {
           const labelId = `checkbox-list-label-${topic._id}`;

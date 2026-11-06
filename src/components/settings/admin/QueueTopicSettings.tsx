@@ -62,7 +62,7 @@ export default function QueueTopicSettings() {
       const blob = await response.blob();
       const contentDisposition = response.headers.get('Content-Disposition');
       const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
-      const filename = filenameMatch ? filenameMatch[1] : 'assignments_example.csv';
+      const filename = filenameMatch ? filenameMatch[1] : 'machines_example.csv';
 
       download(blob, filename);
     } catch (error) {
@@ -72,7 +72,6 @@ export default function QueueTopicSettings() {
 
   /** Dialog Functions */
   const [name, setName] = useState('');
-  const [category, setCategory] = useState('');
   const [startDate, setStartDate] = useState(DateTime.now());
   const [endDate, setEndDate] = useState(DateTime.now());
 
@@ -88,7 +87,6 @@ export default function QueueTopicSettings() {
     setOpenAdd(true);
 
     setName('');
-    setCategory('');
     setStartDate(DateTime.now());
     setEndDate(DateTime.now());
   };
@@ -98,7 +96,6 @@ export default function QueueTopicSettings() {
     setSelectedRow(row);
 
     setName(row.name);
-    setCategory(row.assignment_type);
     setStartDate(DateTime.fromMillis(row.start_date_ms) as DateTime<true>);
     setEndDate(DateTime.fromMillis(row.end_date_ms) as DateTime<true>);
   };
@@ -135,7 +132,6 @@ export default function QueueTopicSettings() {
     await createAssignmentMutation({
       courseId,
       name: name,
-      assignment_type: category,
       start_date_ms: startDate.toMillis(),
       end_date_ms: endDate.toMillis(),
     });
@@ -147,7 +143,7 @@ export default function QueueTopicSettings() {
   const handleEdit = async (event) => {
     event.preventDefault();
     if (!selectedRow?._id) {
-      console.error('No assignment selected');
+      console.error('No machine selected');
       return;
     }
 
@@ -155,7 +151,8 @@ export default function QueueTopicSettings() {
       courseId,
       assignment_id: selectedRow._id,
       name: name,
-      assignment_type: category,
+      // Machines have no type; keep whatever an older topic had.
+      assignment_type: selectedRow.assignment_type,
       start_date_ms: startDate.toMillis(),
       end_date_ms: endDate.toMillis(),
     });
@@ -166,7 +163,7 @@ export default function QueueTopicSettings() {
   const deleteAssignmentMutation = useMutation(api.settings.settings_mutate.deleteAssignment);
   const handleDelete = async () => {
     if (!selectedRow?._id) {
-      console.error('No assignment selected');
+      console.error('No machine selected');
       return;
     }
 
@@ -211,7 +208,7 @@ export default function QueueTopicSettings() {
 
   return (
     <div>
-      <CollapsedTable title="Queue Topic Settings">
+      <CollapsedTable title="Machine Settings">
         {assignmentsToList.map((row, index) => (
           <EditDeleteRow
             key={row._id}
@@ -225,9 +222,6 @@ export default function QueueTopicSettings() {
               <Typography sx={{ fontWeight: 'bold' }}>{row.name}</Typography>
             </TableCell>
             <TableCell align="left">
-              <Typography sx={{ fontStyle: 'italic' }}>{row.assignment_type}</Typography>
-            </TableCell>
-            <TableCell align="left">
               <Typography>{new Date(row.start_date_ms).toLocaleString()}</Typography>
             </TableCell>
             <TableCell align="left">
@@ -236,14 +230,14 @@ export default function QueueTopicSettings() {
           </EditDeleteRow>
         ))}
         <TableRow key="actions" style={{ background: theme.palette.background.paper }}>
-          <TableCell align="center" colSpan={5}>
+          <TableCell align="center" colSpan={4}>
             <Button
               sx={{ mr: 1, fontWeight: 'bold' }}
               color="primary"
               variant="contained"
               onClick={() => handleAddDialog()}
             >
-              + Add Topic
+              + Add Machine
             </Button>
             <Button
               sx={{ mr: 1, fontWeight: 'bold' }}
@@ -266,7 +260,7 @@ export default function QueueTopicSettings() {
       </CollapsedTable>
 
       <AddDialog
-        title="Add New Topic"
+        title="Add New Machine"
         isOpen={openAdd}
         onClose={handleClose}
         handleCreate={handleAdd}
@@ -274,8 +268,6 @@ export default function QueueTopicSettings() {
         <TopicDialogBody
           name={name}
           setName={setName}
-          category={category}
-          setCategory={setCategory}
           startDate={startDate}
           setStartDate={updateStartDate}
           endDate={endDate}
@@ -284,7 +276,7 @@ export default function QueueTopicSettings() {
       </AddDialog>
 
       <EditDialog
-        title={'Edit Topic Info'}
+        title={'Edit Machine Info'}
         isOpen={openEdit}
         onClose={handleClose}
         handleEdit={handleEdit}
@@ -292,8 +284,6 @@ export default function QueueTopicSettings() {
         <TopicDialogBody
           name={name}
           setName={setName}
-          category={category}
-          setCategory={setCategory}
           startDate={startDate}
           setStartDate={updateStartDate}
           endDate={endDate}
@@ -302,7 +292,7 @@ export default function QueueTopicSettings() {
       </EditDialog>
 
       <DeleteDialog
-        title="Delete Topic"
+        title="Delete Machine"
         isOpen={openDelete}
         onClose={handleClose}
         handleDelete={handleDelete}
