@@ -230,7 +230,7 @@ export default function AskQuestion() {
                     fullWidth
                     variant="outlined"
                     type="email"
-                    label="Member email"
+                    label="Email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     inputProps={{ maxLength: 256 }}

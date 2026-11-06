@@ -179,7 +179,7 @@ export const addQuestion = mutation({
     // Handle TA created questions
     if (user_data.kind === 'TA') {
       if (!args.email) {
-        throw new ConvexError('Enter a member email to add a team to the queue');
+        throw new ConvexError('Enter an email to add a team to the queue');
       }
 
       const existing_user = await ctx.db
