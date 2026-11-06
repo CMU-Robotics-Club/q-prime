@@ -21,7 +21,7 @@ export default function AccessControlDialogBody(props) {
           fullWidth
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="student@andrew.cmu.edu"
+          placeholder="member@andrew.cmu.edu"
         />
       </Grid>
       <Grid className="d-flex" item xs={12}>

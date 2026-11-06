@@ -62,7 +62,7 @@ export default function NotificationSettings() {
                   }}
                 />
               }
-              label={<div>Enable queue join notifications</div>}
+              label={<div>Notify me when a team joins the queue</div>}
             />
           </Grid>
           <Grid className="d-flex" item xs={12}>
@@ -81,7 +81,7 @@ export default function NotificationSettings() {
               }
               label={
                 <div>
-                  Remind me after I&apos;ve been helping for
+                  Remind me after I&apos;ve been with a called team for
                   <TextField
                     id="time-notif"
                     disabled={!(remindNotifsEnabled ?? false)}

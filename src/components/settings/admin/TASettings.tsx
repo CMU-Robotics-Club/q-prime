@@ -182,7 +182,7 @@ export default function TASettings() {
 
   return (
     <div>
-      <CollapsedTable title="TA Settings">
+      <CollapsedTable title="Officer Settings">
         {tas.map((row, index) => (
           <EditDeleteRow
             key={row.id}
@@ -210,7 +210,7 @@ export default function TASettings() {
               variant="contained"
               onClick={() => handleAddDialog()}
             >
-              + Add TA
+              + Add Officer
             </Button>
             <Button
               sx={{ mr: 1, fontWeight: 'bold' }}
@@ -235,7 +235,7 @@ export default function TASettings() {
       {tas && (
         <>
           <AddDialog
-            title="Add New TA"
+            title="Add New Officer"
             isOpen={openAdd}
             onClose={handleClose}
             handleCreate={handleAdd}
@@ -251,7 +251,7 @@ export default function TASettings() {
           </AddDialog>
 
           <EditDialog
-            title={'Edit Info for TA "' + name + '"'}
+            title={'Edit Info for Officer "' + name + '"'}
             isOpen={openEdit}
             onClose={handleClose}
             handleEdit={handleEdit}
@@ -271,7 +271,7 @@ export default function TASettings() {
           </EditDialog>
 
           <DeleteDialog
-            title="Delete TA"
+            title="Delete Officer"
             isOpen={openDelete}
             onClose={handleClose}
             handleDelete={handleDelete}

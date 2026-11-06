@@ -7,7 +7,7 @@ export default function TADialogBody(props) {
     <Grid container spacing={3}>
       <Grid className="d-flex" item xs={8}>
         <TextField
-          label="TA Name"
+          label="Officer Name"
           variant="standard"
           required
           fullWidth
@@ -25,7 +25,7 @@ export default function TADialogBody(props) {
       </Grid>
       <Grid className="d-flex" item xs={12}>
         <TextField
-          label="TA Email"
+          label="Officer Email"
           variant="standard"
           required
           fullWidth

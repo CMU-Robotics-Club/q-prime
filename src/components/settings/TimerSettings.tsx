@@ -52,7 +52,7 @@ export default function TimerSettings() {
                   }}
                 />
               }
-              label={<div>Show timer when I&apos;m helping a student</div>}
+              label={<div>Show timer on teams I&apos;ve called</div>}
             />
           </Grid>
           {queueData && queueData.allow_tas_show_others_timer && (
@@ -71,7 +71,7 @@ export default function TimerSettings() {
                     }}
                   />
                 }
-                label={<div>Show timers when other TAs are helping students</div>}
+                label={<div>Show timers on teams other officers have called</div>}
               />
             </Grid>
           )}
