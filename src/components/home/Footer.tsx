@@ -62,7 +62,7 @@ export default function Footer(props: { gitHubLink?: string }) {
               textAlign: 'center',
             })}
           >
-            CMU Robotics Club · Based on ohq by CMU 15-122
+            CMU 15-122 staff · sponsored by Honk
           </Box>
         </Stack>
         {gitHubLink && (
