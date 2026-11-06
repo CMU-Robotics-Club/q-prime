@@ -206,12 +206,20 @@ http.route({
       { user_id: user, courseId },
     );
 
+    // The dump above checks admin access, so this second read is safe.
+    const teamNumbers = new Map(
+      (await ctx.runQuery(internal.common.internalGetQuestionTeamNumbers, { courseId })).map(
+        (q) => [q.question_id, q.team_number],
+      ),
+    );
+
     const headers = [
       'question_id',
       'semester_id',
       'semester_name',
       'assignment_id',
       'assignment_name',
+      'team_number',
       'student_id',
       'student_name',
       'student_email',
@@ -237,7 +245,8 @@ http.route({
 
     const lines: string[] = [headers.join(',')];
     for (const row of rows) {
-      lines.push(headers.map((h) => escapeCell(row[h])).join(','));
+      const cells = { ...row, team_number: teamNumbers.get(row.question_id) };
+      lines.push(headers.map((h) => escapeCell(cells[h])).join(','));
     }
     const csvContent = lines.join('\r\n');
 

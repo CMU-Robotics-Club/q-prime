@@ -3,6 +3,7 @@ import PauseIcon from '@mui/icons-material/Pause';
 
 import EntryTails from './EntryTails';
 import StudentStatus from './TailOptions/StudentStatus';
+import LinkifiedText from '../../common/LinkifiedText';
 
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
@@ -41,9 +42,7 @@ export default function StudentEntry(props) {
   // (1fr) is the greedy field; this row's own status column (only present when
   // this student is paused) eats into it from the left and the actions (content
   // width) eat into it from the right.
-  const gridTemplateColumns = isPaused
-    ? '22% 64px minmax(0, 1fr) auto'
-    : '22% minmax(0, 1fr) auto';
+  const gridTemplateColumns = isPaused ? '22% 64px minmax(0, 1fr) auto' : '22% minmax(0, 1fr) auto';
 
   return (
     <Box
@@ -58,9 +57,17 @@ export default function StudentEntry(props) {
         bgcolor: index % 2 ? theme.palette.background.paper : theme.palette.paper[3],
       })}
     >
-      {/* Identity */}
+      {/* Identity: team first, then the member who submitted. Entries from
+          before team numbers existed fall back to the member's name. */}
       <Box sx={{ minWidth: 0, wordBreak: 'break-word' }}>
-        <Typography sx={t.studentName}>{student.student_name}</Typography>
+        {student.team_number !== undefined ? (
+          <>
+            <Typography sx={t.studentName}>Team {student.team_number}</Typography>
+            <Typography sx={t.studentEmail}>{student.student_name}</Typography>
+          </>
+        ) : (
+          <Typography sx={t.studentName}>{student.student_name}</Typography>
+        )}
         <Typography sx={t.studentEmail}>{student.student_email}</Typography>
         <Typography sx={[t.monoLabel, { mt: '2px' }]}>[{student.location}]</Typography>
       </Box>
@@ -78,11 +85,11 @@ export default function StudentEntry(props) {
         </Stack>
       )}
 
-      {/* Question — fills the remaining space */}
-      <Box sx={{ minWidth: 0, wordBreak: 'break-word' }}>
+      {/* Machine + part — fills the remaining space */}
+      <Box sx={{ minWidth: 0, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
         <Typography sx={t.monoTag}>[{student.assignment_name}]</Typography>
-        <Typography sx={[t.bodySmall, { mt: 0.5, color: 'ink.primary' }]}>
-          {student.question}
+        <Typography sx={[t.bodySmall, { mt: 0.5, color: 'ink.primary', whiteSpace: 'pre-line' }]}>
+          <LinkifiedText>{student.question}</LinkifiedText>
         </Typography>
       </Box>
 

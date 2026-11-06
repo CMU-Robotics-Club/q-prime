@@ -42,6 +42,23 @@ export async function getCurrentSemester(ctx: QueryCtx, courseId: Id<'courses'>)
   return curr_sem;
 }
 
+/**
+ * Team number of every archived print request in the course's current semester.
+ * Used to add the team column to the CSV export; the caller must already have
+ * checked access (http.ts runs metrics.internalGetQuestionsCsvDump first).
+ */
+export const internalGetQuestionTeamNumbers = internalQuery({
+  args: { courseId: v.id('courses') },
+  handler: async (ctx, args) => {
+    const curr_sem = await getCurrentSemester(ctx, args.courseId);
+    const questions = await ctx.db
+      .query('questions')
+      .withIndex('by_semester_and_entry_time_ms', (q) => q.eq('semester_id', curr_sem._id))
+      .collect();
+    return questions.map((q) => ({ question_id: q._id, team_number: q.team_number }));
+  },
+});
+
 export async function getCurrentUser(ctx: QueryCtx, courseId: Id<'courses'>) {
   const user_id = await getAuthUserId(ctx);
 

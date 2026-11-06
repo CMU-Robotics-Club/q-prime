@@ -129,12 +129,16 @@ export const deleteAnnouncement = mutation({
   },
 });
 
+// Keep in sync with the Part field's maxLength in AskQuestion.tsx.
+const MAX_PART_LENGTH = 1000;
+
 export const addQuestion = mutation({
   args: {
     courseId: v.id('courses'),
     question: v.string(),
     location: v.string(),
     assignment_id: v.id('assignments'),
+    team_number: v.number(),
     override_cooldown: v.boolean(),
     email: v.optional(v.string()), // only used for TA created questions
   },
@@ -153,6 +157,18 @@ export const addQuestion = mutation({
       throw new ConvexError('User not authenticated for this course');
     }
     const curr_sem = await getCurrentSemester(ctx, args.courseId);
+
+    if (!Number.isSafeInteger(args.team_number) || args.team_number < 1) {
+      throw new ConvexError('Team number must be a whole number of 1 or more');
+    }
+    if (args.question.trim().length === 0) {
+      throw new ConvexError('Add a link to or description of your part');
+    }
+    if (args.question.length > MAX_PART_LENGTH) {
+      throw new ConvexError(
+        `Part link or description must be at most ${MAX_PART_LENGTH} characters`,
+      );
+    }
 
     // Handle TA created questions
     if (user_data.kind === 'TA') {
@@ -266,6 +282,7 @@ export const addQuestion = mutation({
         status: 'waiting',
         question: args.question,
         location: args.location,
+        team_number: args.team_number,
         entry_time_ms: Date.now(),
         messages_from_tas: [],
         position: queue_length,
@@ -273,7 +290,13 @@ export const addQuestion = mutation({
         has_unread_messages: false,
       });
 
-      await sendQueueJoinNotifs(ctx, args.courseId, prefs.preferred_name, assignment_name);
+      await sendQueueJoinNotifs(
+        ctx,
+        args.courseId,
+        args.team_number,
+        prefs.preferred_name,
+        assignment_name,
+      );
     }
     // handle student created questions
     else {
@@ -371,6 +394,7 @@ export const addQuestion = mutation({
         status: args.override_cooldown ? 'cooldown_violation' : 'waiting',
         question: args.question,
         location: args.location,
+        team_number: args.team_number,
         entry_time_ms: Date.now(),
         messages_from_tas: [],
         position: queue_length,
@@ -378,7 +402,13 @@ export const addQuestion = mutation({
         has_unread_messages: false,
       });
 
-      await sendQueueJoinNotifs(ctx, args.courseId, prefs.preferred_name, assignment_name);
+      await sendQueueJoinNotifs(
+        ctx,
+        args.courseId,
+        args.team_number,
+        prefs.preferred_name,
+        assignment_name,
+      );
     }
 
     return {
@@ -391,6 +421,7 @@ export const addQuestion = mutation({
 async function sendQueueJoinNotifs(
   ctx: MutationCtx,
   courseId: Id<'courses'>,
+  team_number: number,
   name: string,
   assignment: string,
 ) {
@@ -416,8 +447,8 @@ async function sendQueueJoinNotifs(
       .map(async (ta) => {
         await ctx.runMutation(internal.common.internalSendNotification, {
           semester_user: ta.semester_user_id,
-          title: 'New Queue Entry',
-          body: `Name: ${name}\nAssignment: ${assignment}`,
+          title: 'New Print Request',
+          body: `Team ${team_number}\nMember: ${name}\nMachine: ${assignment}`,
         });
       }),
   );
@@ -492,6 +523,7 @@ export const removeStudent = mutation({
 
       question: existing_entry.question,
       location: existing_entry.location,
+      team_number: existing_entry.team_number,
 
       created_by: existing_entry.created_by,
       finished_by: args.reason,

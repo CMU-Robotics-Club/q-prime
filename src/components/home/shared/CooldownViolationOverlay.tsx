@@ -8,7 +8,7 @@ import DialogShell from '../../common/dialogs/DialogShell';
 import { t } from '../../../themes/styles';
 
 export default function CooldownViolationOverlay(props) {
-  const { open, setOpen, email, question, location, assignmentId, timePassed } = props;
+  const { open, setOpen, email, teamNumber, question, location, assignmentId, timePassed } = props;
   const courseId = useCourseId();
 
   const queueData = useQuery(api.home.home_get.getQueueData, { courseId });
@@ -16,11 +16,13 @@ export default function CooldownViolationOverlay(props) {
   const addQuestionMutation = useMutation(api.home.home_mutate.addQuestion);
   async function callAddQuestionAPIOverrideCooldown() {
     if (queueData?.allow_cooldown_override) {
+      // Same args as the first submit in AskQuestion, plus the override.
       await addQuestionMutation({
         courseId,
         question,
         location,
         assignment_id: assignmentId,
+        team_number: teamNumber,
         override_cooldown: true,
         email,
       }).finally(() => {
@@ -50,11 +52,12 @@ export default function CooldownViolationOverlay(props) {
     >
       <Typography sx={t.bodyMuted}>
         Cooldown is {rejoin_time_mins} minute{rejoin_time_mins === 1 ? '' : 's'} after your last
-        question.
+        print request.
         {allowOverride && (
           <>
             {' '}
-            Overriding will add you to the queue, but you&apos;ll be frozen until a TA approves you.
+            Overriding will add your request to the queue, but it&apos;ll be frozen until an officer
+            approves it.
           </>
         )}
       </Typography>

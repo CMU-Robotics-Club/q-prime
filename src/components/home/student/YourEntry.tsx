@@ -4,6 +4,7 @@ import PauseIcon from '@mui/icons-material/Pause';
 
 import BaseCard from '../../common/cards/BaseCard';
 import OhqButton from '../../common/buttons/OhqButton';
+import LinkifiedText from '../../common/LinkifiedText';
 
 import { useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
@@ -19,7 +20,7 @@ export default function YourEntry(props) {
   const studentData = userData?.student_data;
 
   const cooldownMsg = queueData?.allow_cooldown_override
-    ? 'Frozen in line — you will not advance until a TA approves your entry.'
+    ? 'Frozen in line — you will not advance until an officer approves your request.'
     : 'Frozen in line — wait for your cooldown to end before joining the queue again.';
 
   const position =
@@ -75,6 +76,14 @@ export default function YourEntry(props) {
         <Divider sx={{ my: 2 }} />
 
         <Stack direction="row" spacing={4} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
+          {studentData?.team_number !== undefined && (
+            <Box>
+              <Box sx={t.monoLabel}>[team]</Box>
+              <Typography sx={{ fontSize: 14, color: 'ink.primary' }}>
+                {studentData.team_number}
+              </Typography>
+            </Box>
+          )}
           <Box>
             <Box sx={t.monoLabel}>[location]</Box>
             <Typography sx={{ fontSize: 14, color: 'ink.primary' }}>
@@ -82,7 +91,7 @@ export default function YourEntry(props) {
             </Typography>
           </Box>
           <Box>
-            <Box sx={t.monoLabel}>[topic]</Box>
+            <Box sx={t.monoLabel}>[machine]</Box>
             <Typography sx={{ fontSize: 14, color: 'ink.primary' }}>
               {studentData?.assignment_name || ''}
             </Typography>
@@ -91,9 +100,9 @@ export default function YourEntry(props) {
 
         <Divider sx={{ my: 2 }} />
 
-        <Box sx={t.monoLabel}>QUESTION</Box>
-        <Typography sx={[t.body, { mt: 0.5, whiteSpace: 'pre-line' }]}>
-          {studentData?.question || ''}
+        <Box sx={t.monoLabel}>PART</Box>
+        <Typography sx={[t.body, { mt: 0.5, whiteSpace: 'pre-line', overflowWrap: 'anywhere' }]}>
+          <LinkifiedText>{studentData?.question || ''}</LinkifiedText>
         </Typography>
       </CardContent>
     </BaseCard>

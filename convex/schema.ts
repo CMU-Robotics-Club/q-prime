@@ -146,6 +146,7 @@ export default defineSchema({
 
     question: v.string(),
     location: v.string(),
+    team_number: v.optional(v.number()), // unset on rows archived before team numbers existed
 
     created_by: v.union(v.literal('student'), v.literal('TA')),
     finished_by: v.union(v.literal('helped'), v.literal('removed')),
@@ -191,6 +192,7 @@ export default defineSchema({
     position: v.number(),
     question: v.string(),
     location: v.string(),
+    team_number: v.optional(v.number()), // unset on entries created before team numbers existed
 
     entry_time_ms: v.number(),
 
