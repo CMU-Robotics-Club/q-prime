@@ -1,7 +1,6 @@
 import { CircularProgress, Typography } from '@mui/material';
 
 import AdminMain from './admin/AdminMain';
-import VideoChatSettings from './VideoChatSettings';
 import NotificationSettings from './NotificationSettings';
 import TimerSettings from './TimerSettings';
 
@@ -23,7 +22,6 @@ function Main() {
       <Typography variant="h3" textAlign="center" sx={{ mt: 4, mb: 2 }} fontWeight="bold">
         Settings
       </Typography>
-      {userData.user_kind === 'TA' && <VideoChatSettings />}
       {userData.user_kind === 'TA' && <NotificationSettings />}
       {userData.user_kind === 'TA' && <TimerSettings />}
 
