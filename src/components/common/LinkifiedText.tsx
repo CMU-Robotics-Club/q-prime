@@ -1,4 +1,6 @@
+import { Link } from '@mui/material';
 import Linkify from 'linkify-react';
+import type { IntermediateRepresentation } from 'linkifyjs';
 
 const HAS_SCHEME = /^[a-z][a-z\d+.-]*:/i;
 
@@ -18,6 +20,12 @@ const LINKIFY_OPTIONS = {
   target: '_blank',
   rel: 'noopener noreferrer',
   validate: { url: isLinkableUrl, email: false },
+  // Themed MUI link: the browser-default blue is unreadable on the dark theme.
+  render: ({ attributes, content }: IntermediateRepresentation) => (
+    <Link {...attributes} underline="always" sx={{ wordBreak: 'break-all' }}>
+      {content}
+    </Link>
+  ),
 };
 
 /** Renders plain text with any URLs in it as links that open in a new tab. */
