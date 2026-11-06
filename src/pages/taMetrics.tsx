@@ -187,7 +187,6 @@ function TAMetricsContent() {
                   <TableCell sx={{ minWidth: 100 }}>Location</TableCell>
                   <TableCell sx={{ minWidth: 80 }}>Wait (min)</TableCell>
                   <TableCell sx={{ minWidth: 80 }}>Help (min)</TableCell>
-                  <TableCell sx={{ minWidth: 80 }}>Ask to Fix</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -225,7 +224,6 @@ function TAMetricsContent() {
                       <TableCell sx={{ wordBreak: 'break-word' }}>{row.location}</TableCell>
                       <TableCell>{row.wait_time_mins}</TableCell>
                       <TableCell>{row.help_duration_mins}</TableCell>
-                      <TableCell>{row.num_asked_to_fix}</TableCell>
                     </TableRow>
                   ))}
               </TableBody>

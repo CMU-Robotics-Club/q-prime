@@ -635,58 +635,6 @@ export const unhelpStudent = mutation({
   },
 });
 
-export const updateQuestion = mutation({
-  args: {
-    courseId: v.id('courses'),
-    question: v.string(),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const user_data = await getCurrentUser(ctx, args.courseId);
-    if (!user_data) {
-      throw new ConvexError('User not authenticated for this course');
-    }
-    const student = (await getStudent(ctx, user_data.sem_user_id))!;
-
-    const existing_entry = (await getQueueEntry(ctx, args.courseId, student._id))!;
-
-    if (existing_entry.question === args.question) {
-      throw new ConvexError('Question is the same');
-    }
-
-    await ctx.db.patch(existing_entry._id, {
-      question: args.question,
-      status: 'waiting',
-    });
-  },
-});
-
-export const askToFixQuestion = mutation({
-  args: {
-    courseId: v.id('courses'),
-    student_id: v.id('students'),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    await ensureAuthAndTA(ctx, args.courseId);
-    const existing_entry = (await getQueueEntry(ctx, args.courseId, args.student_id))!;
-
-    await ctx.db.patch(existing_entry._id, {
-      status: 'fixing_question',
-      num_asked_to_fix: existing_entry.num_asked_to_fix + 1,
-    });
-
-    const student_sem_user = (await ctx.db.get(args.student_id))!.semester_user_id;
-
-    // notify the student
-    await ctx.runMutation(internal.common.internalSendNotification, {
-      semester_user: student_sem_user,
-      title: 'Please update your question',
-      body: 'A TA has requested that you update your question.',
-    });
-  },
-});
-
 export const messageStudent = mutation({
   args: {
     courseId: v.id('courses'),

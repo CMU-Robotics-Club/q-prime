@@ -51,7 +51,6 @@ export default function ConfigSettings() {
   const adminSettings = useQuery(api.settings.settings_get.getQueueSettings, { courseId });
 
   const [slackURL, setSlackURL] = useState('');
-  const [questionsURL, setQuestionsURL] = useState('');
   const [allowedEmailDomains, setAllowedEmailDomains] = useState<string[]>([]);
   const [enforceEmailDomain, setEnforceEmailDomain] = useState(true);
   const [allowCDOverride, setAllowCDOverride] = useState(true);
@@ -79,7 +78,6 @@ export default function ConfigSettings() {
   useEffect(() => {
     if (queueData) {
       setAllowCDOverride(queueData.allow_cooldown_override);
-      setQuestionsURL(queueData.questions_policy_url || '');
     }
   }, [queueData]);
 
@@ -100,7 +98,6 @@ export default function ConfigSettings() {
   const allowCDOverrideDirty =
     queueLoaded && allowCDOverride !== queueData?.allow_cooldown_override;
   const slackURLDirty = adminLoaded && slackURL !== (adminSettings?.slackURL ?? '');
-  const questionsURLDirty = queueLoaded && questionsURL !== (queueData?.questions_policy_url ?? '');
   const allowShowOthersTimerDirty =
     adminLoaded && allowShowOthersTimer !== adminSettings?.allowShowOthersTimer;
 
@@ -112,11 +109,6 @@ export default function ConfigSettings() {
   const updateSlackURLMutation = useMutation(api.settings.settings_mutate.updateSlackURL);
   const handleUpdateSlackURL = async () => {
     await updateSlackURLMutation({ courseId, slackURL });
-  };
-
-  const updateQuestionsURLMutation = useMutation(api.settings.settings_mutate.updateQuestionsURL);
-  const handleUpdateQuestionsURL = async () => {
-    await updateQuestionsURLMutation({ courseId, questionsURL });
   };
 
   const updateAllowedEmailDomainsMutation = useMutation(
@@ -360,21 +352,6 @@ export default function ConfigSettings() {
             value={slackURL ?? ''}
             onChange={(e) => setSlackURL(e.target.value)}
             placeholder="https://hooks.slack.com/..."
-            sx={{ width: 320 }}
-          />
-        </SettingRow>
-
-        <SettingRow
-          label="Questions Guide URL"
-          description="Link shown to students when Asked to Fix"
-          dirty={questionsURLDirty}
-          onSave={handleUpdateQuestionsURL}
-        >
-          <TextField
-            size="small"
-            value={questionsURL ?? ''}
-            onChange={(e) => setQuestionsURL(e.target.value)}
-            placeholder="https://..."
             sx={{ width: 320 }}
           />
         </SettingRow>

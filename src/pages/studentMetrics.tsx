@@ -162,14 +162,6 @@ function StudentMetricsContent() {
             </Grid>
             <Grid sx={{ textAlign: 'center' }}>
               <Typography variant="h6" fontWeight="bold">
-                Total Asked to Fix
-              </Typography>
-              <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
-                {studentHistory.totalAskedToFix}
-              </Typography>
-            </Grid>
-            <Grid sx={{ textAlign: 'center' }}>
-              <Typography variant="h6" fontWeight="bold">
                 Total Time Helped
               </Typography>
               <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
@@ -195,7 +187,6 @@ function StudentMetricsContent() {
                   <TableCell sx={{ minWidth: 100 }}>Status</TableCell>
                   <TableCell sx={{ minWidth: 80 }}>Wait (min)</TableCell>
                   <TableCell sx={{ minWidth: 80 }}>Help (min)</TableCell>
-                  <TableCell sx={{ minWidth: 80 }}>Ask to Fix</TableCell>
                   <TableCell sx={{ minWidth: 120 }}>Helped By</TableCell>
                 </TableRow>
               </TableHead>
@@ -217,7 +208,6 @@ function StudentMetricsContent() {
                       </TableCell>
                       <TableCell>{row.wait_time_mins}</TableCell>
                       <TableCell>{row.help_duration_mins}</TableCell>
-                      <TableCell>{row.num_asked_to_fix}</TableCell>
                       <TableCell sx={{ wordBreak: 'break-word' }}>
                         {row.ta_id ? (
                           <MuiLink

@@ -102,7 +102,6 @@ export default function AdminMetrics() {
     { id: 'student_email', label: 'Email', width: 25 },
     { id: 'student_name', label: 'Name', width: 25 },
     { id: 'count', label: 'Num Questions', width: 100 },
-    { id: 'badCount', label: 'Num Ask to Fix', width: 100 },
     { id: 'timeHelped', label: 'Total Helping Time (min)', width: 100 },
     { id: 'average', label: 'Average Helping Time (min)', width: 100 },
   ];
