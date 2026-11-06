@@ -20,7 +20,7 @@ export default function DateTimeSelector() {
   return (
     <div>
       <Typography variant="h5" sx={{ mt: 4, ml: 10 }} fontWeight="bold">
-        OH Session Statistics
+        Session Statistics
       </Typography>
       <Grid container spacing={3} sx={{ mt: 2, ml: 10, maxWidth: '90%' }}>
         <Grid className="d-flex" item xs={2}>
@@ -37,7 +37,7 @@ export default function DateTimeSelector() {
         </Grid>
         <Grid className="d-flex" item xs={2}>
           <TimePicker
-            label="OH Slot Start Time"
+            label="Slot Start Time"
             value={value}
             onChange={handleChange}
             renderInput={(params) => <TextField {...params} />}
@@ -45,7 +45,7 @@ export default function DateTimeSelector() {
         </Grid>
         <Grid className="d-flex" item xs={2}>
           <TimePicker
-            label="OH Slot End Time"
+            label="Slot End Time"
             value={value}
             onChange={handleChange}
             renderInput={(params) => <TextField {...params} />}

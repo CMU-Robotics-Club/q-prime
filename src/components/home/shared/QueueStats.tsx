@@ -55,9 +55,9 @@ export default function QueueStats() {
           <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
           <Box>
             <Typography sx={t.bodySmall}>
-              There are{' '}
+              There {numStudents === 1 ? 'is' : 'are'}{' '}
               <Box component="strong" sx={{ fontWeight: 700, color: 'ink.primary' }}>
-                {numStudents} student{numStudents === 1 ? '' : 's'}
+                {numStudents} team{numStudents === 1 ? '' : 's'}
               </Box>{' '}
               on the queue.
             </Typography>

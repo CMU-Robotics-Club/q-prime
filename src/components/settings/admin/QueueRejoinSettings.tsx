@@ -20,9 +20,7 @@ export default function QueueRejoinSettings() {
     }
   }, [queueData]);
 
-  const savedRejoinTime = queueData
-    ? Math.round(queueData.rejoin_time_ms / 1000 / 60)
-    : undefined;
+  const savedRejoinTime = queueData ? Math.round(queueData.rejoin_time_ms / 1000 / 60) : undefined;
   const dirty = savedRejoinTime !== undefined && rejoinTime !== savedRejoinTime;
 
   const updateRejoinTimeMutation = useMutation(api.settings.settings_mutate.updateRejoinTime);
@@ -39,7 +37,7 @@ export default function QueueRejoinSettings() {
 
         <SettingRow
           label="Queue rejoin time"
-          description="How long after leaving the queue students can rejoin"
+          description="How long someone must wait to rejoin after leaving the queue"
           dirty={dirty}
           onSave={onSave}
         >

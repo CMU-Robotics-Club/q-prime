@@ -53,7 +53,7 @@ export default function CreateCoursePage() {
       // to the new course's settings — no second OAuth round-trip needed.
       navigate(`/${result.slug}/settings`);
     } catch (err: any) {
-      setError(err?.data?.message || err?.message || 'Failed to create course');
+      setError(err?.data?.message || err?.message || 'Failed to create event');
     }
   }
 
@@ -78,9 +78,9 @@ export default function CreateCoursePage() {
   if (!isAuthenticated) {
     return (
       <Container sx={{ py: 4, maxWidth: 600 }}>
-        <Typography variant="h4">Create New Course</Typography>
+        <Typography variant="h4">Create New Event</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          Sign in with Google before creating a course. Your account will be the course owner —
+          Sign in with Google before creating an event. Your account will be the event owner —
           you'll add other owner emails on the next screen.
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
@@ -109,9 +109,9 @@ export default function CreateCoursePage() {
 
   return (
     <Container sx={{ py: 4, maxWidth: 600 }}>
-      <Typography variant="h4">Create New Course</Typography>
+      <Typography variant="h4">Create New Event</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-        After submitting, you'll be taken to the course's settings page. Make sure your email is one
+        After submitting, you'll be taken to the event's settings page. Make sure your email is one
         of the owner emails if you want admin access.
       </Typography>
 
@@ -124,7 +124,7 @@ export default function CreateCoursePage() {
       <form onSubmit={onSubmit}>
         <Stack spacing={2} sx={{ mt: 3 }}>
           <TextField
-            label="Slug (URL identifier, e.g. cs15122)"
+            label="Slug (URL identifier, e.g. redrobot)"
             required
             inputProps={{ pattern: '[a-z0-9-]+' }}
             helperText="Lowercase letters, digits, hyphens only"
@@ -132,7 +132,7 @@ export default function CreateCoursePage() {
             onChange={(e) => setSlug(e.target.value)}
           />
           <TextField
-            label="Course Display Name"
+            label="Event Display Name"
             required
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
@@ -239,7 +239,7 @@ export default function CreateCoursePage() {
           </Stack>
 
           <Button type="submit" variant="contained" sx={{ mt: 2 }}>
-            Create Course
+            Create Event
           </Button>
         </Stack>
       </form>

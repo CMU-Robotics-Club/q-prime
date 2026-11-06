@@ -9,7 +9,7 @@ export default function OpenAnnouncement(props) {
     <DialogShell
       open={isOpen}
       onClose={onClose}
-      title="Course update"
+      title="Event update"
       primaryAction={{
         label: announcementInfo?.markedRead ? 'Close' : 'Mark as read',
         onClick: onMarkRead,
