@@ -1,31 +1,28 @@
 {
-  "short_name": "ohq.",
-  "name": "ohq. — Office Hours Queue",
+  "short_name": "Print Queue",
+  "name": "Red Robot Print Queue",
+  "description": "Queue for 3D printers and laser cutters at CMU Robotics Club's Red Robot hackathon.",
   "icons": [
     {
-      "src": "favicon.svg",
-      "type": "image/svg+xml",
-      "sizes": "any",
-      "purpose": "any"
-    },
-    {
       "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "sizes": "48x48 32x32 16x16",
       "type": "image/x-icon"
     },
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#14532D",
-  "background_color": "#FAF7F2"
+  "theme_color": "#D40000",
+  "background_color": "#FFFFFF"
 }

@@ -23,12 +23,17 @@ export default function Footer(props: { gitHubLink?: string }) {
         spacing={1.5}
         sx={{ px: 3 }}
       >
-        <Stack direction="row" alignItems="baseline" spacing={1.5}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems="center"
+          spacing={{ xs: 1, sm: 1.5 }}
+        >
           <Box
             component="span"
             sx={(theme) => ({
               display: 'inline-flex',
-              alignItems: 'baseline',
+              alignItems: 'center',
+              gap: 0.75,
               fontFamily: theme.fonts.ui,
               fontWeight: 700,
               fontSize: 14,
@@ -37,20 +42,15 @@ export default function Footer(props: { gitHubLink?: string }) {
               letterSpacing: '-0.02em',
             })}
           >
-            ohq
+            {/* The RoboClub mark; same file as the browser favicon. */}
             <Box
-              component="span"
+              component="img"
+              src="/favicon.svg"
+              alt=""
               aria-hidden
-              sx={(theme) => ({
-                display: 'inline-block',
-                width: '0.3em',
-                height: '0.3em',
-                ml: '0.05em',
-                borderRadius: '999px',
-                background: theme.palette.forest.main,
-                transform: 'translateY(-0.5em)',
-              })}
+              sx={{ display: 'block', width: 20, height: 20 }}
             />
+            Red Robot Print Queue
           </Box>
           <Box
             component="span"
@@ -59,6 +59,7 @@ export default function Footer(props: { gitHubLink?: string }) {
               fontSize: 12,
               lineHeight: 1,
               color: theme.palette.ink.muted,
+              textAlign: 'center',
             })}
           >
             CMU 15-122 staff · sponsored by Honk
@@ -80,7 +81,7 @@ export default function Footer(props: { gitHubLink?: string }) {
               '&:hover': { color: theme.palette.ink.primary, textDecoration: 'underline' },
             })}
           >
-            Report a bug
+            Source on GitHub
           </Link>
         )}
       </Stack>
