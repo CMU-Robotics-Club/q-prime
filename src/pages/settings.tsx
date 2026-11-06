@@ -31,7 +31,7 @@ function Settings() {
   ) : (
     <>
       <Typography variant="body1">
-        You must be signed in as a TA to view the settings page.
+        You must be signed in as an officer to view the settings page.
       </Typography>
     </>
   );

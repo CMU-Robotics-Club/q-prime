@@ -60,9 +60,8 @@ export default function ChangeNameBtn(props) {
           <DialogTitle>Change Name</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Update the name that is displayed when you are on the queue and the name we will call
-              out to help you during office hours. Your professor can see this, so please make it
-              appropriate!
+              This is the name shown on the queue and called out when your team is up. Officers can
+              see it, so keep it appropriate!
             </DialogContentText>
             <TextField
               value={tmpPrefName}

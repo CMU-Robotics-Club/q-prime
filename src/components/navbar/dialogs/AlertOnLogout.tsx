@@ -26,7 +26,7 @@ export default function AlertOnLogout(props) {
         <DialogContent>
           <DialogContentText>
             {' '}
-            If logged out, you may not get notified when you&apos;re up next.
+            If logged out, you may not get notified when your team is up next.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
