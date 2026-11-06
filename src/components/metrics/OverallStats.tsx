@@ -33,7 +33,7 @@ export default function OverallStats() {
       >
         <Grid sx={{ px: 4, py: 4, alignItems: 'center', textAlign: 'center' }}>
           <Typography variant="h6" fontWeight="bold">
-            Number of Questions
+            Number of Print Requests
           </Typography>
           <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
             {numQuestionsToday}
@@ -51,7 +51,7 @@ export default function OverallStats() {
         <Divider orientation="vertical" variant="middle" flexItem />
         <Grid sx={{ px: 4, py: 4, alignItems: 'center', textAlign: 'center' }}>
           <Typography variant="h6" fontWeight="bold">
-            TA:Student Ratio
+            Officer:Member Ratio
           </Typography>
           <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
             {taStudentRatio}

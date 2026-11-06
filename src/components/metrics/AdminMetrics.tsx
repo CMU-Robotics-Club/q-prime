@@ -101,17 +101,17 @@ export default function AdminMetrics() {
   const studentCols = [
     { id: 'student_email', label: 'Email', width: 25 },
     { id: 'student_name', label: 'Name', width: 25 },
-    { id: 'count', label: 'Num Questions', width: 100 },
-    { id: 'timeHelped', label: 'Total Helping Time (min)', width: 100 },
-    { id: 'average', label: 'Average Helping Time (min)', width: 100 },
+    { id: 'count', label: 'Num Print Requests', width: 100 },
+    { id: 'timeHelped', label: 'Total Call Time (min)', width: 100 },
+    { id: 'average', label: 'Average Call Time (min)', width: 100 },
   ];
 
   const taCols = [
     { id: 'ta_email', label: 'Email', width: 25 },
     { id: 'ta_name', label: 'Name', width: 25 },
-    { id: 'count', label: 'Num Questions Answered', width: 100 },
-    { id: 'timeHelping', label: 'Total Time Helping (min)', width: 100 },
-    { id: 'average', label: 'Average Time Helping (min)', width: 100 },
+    { id: 'count', label: 'Num Requests Handled', width: 100 },
+    { id: 'timeHelping', label: 'Total Call Time (min)', width: 100 },
+    { id: 'average', label: 'Average Call Time (min)', width: 100 },
   ];
 
   return (
@@ -123,7 +123,7 @@ export default function AdminMetrics() {
         sx={{ mt: 4, mx: 10 }}
       >
         <Typography variant="h5" fontWeight="bold">
-          Ranked Students and Ranked TAs
+          Ranked Members and Ranked Officers
         </Typography>
         <Button
           variant="contained"
@@ -131,7 +131,7 @@ export default function AdminMetrics() {
           onClick={handleExportQuestionsCsv}
           sx={{ fontWeight: 'bold' }}
         >
-          Export Questions CSV
+          Export Print Requests CSV
         </Button>
       </Stack>
 

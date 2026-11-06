@@ -91,10 +91,10 @@ export default function EntryTails(props) {
         actionElement = (
           <>
             <Typography variant="body2" color="text.secondary">
-              {student.helping_ta?.preferred_name} helping
+              Called by {student.helping_ta?.preferred_name}
             </Typography>
           </>
-        )
+        );
       }
       break;
     case 'frozen':
@@ -113,7 +113,7 @@ export default function EntryTails(props) {
             showCooldownApproval ? approveCooldownOverride() : handleClickHelp(index)
           }
         >
-          {showCooldownApproval ? 'Approve' : 'Help'}
+          {showCooldownApproval ? 'Approve' : 'Call'}
         </OhqButton>
       );
       break;
@@ -125,7 +125,7 @@ export default function EntryTails(props) {
           disabled={isHelping || tempDisabled}
           onClick={() => handleClickHelp(index)}
         >
-          Help
+          Call
         </OhqButton>
       );
       break;
@@ -146,7 +146,7 @@ export default function EntryTails(props) {
       <DialogShell
         open={openRemoveConfirm}
         onClose={() => setOpenRemoveConfirm(false)}
-        title="Remove this student?"
+        title="Remove this team?"
         primaryAction={{
           label: 'Remove',
           variant: 'danger',

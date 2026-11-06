@@ -169,7 +169,7 @@ export default function StudentEntries() {
   const handleClickUnfreeze = (_index) => {};
 
   return (
-    <ListCard title="Students" HeaderTailComp={FilterWithProps}>
+    <ListCard title="Teams" HeaderTailComp={FilterWithProps}>
       {filteredStudents.map((student, index) => (
         <StudentEntry
           isHelping={isHelping}

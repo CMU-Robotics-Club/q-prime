@@ -128,7 +128,7 @@ function StudentMetricsContent() {
         </Button>
 
         <Typography variant="h5" sx={{ my: 2 }} fontWeight="bold">
-          Question History: {studentHistory.studentName}
+          Print Request History: {studentHistory.studentName}
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
           {studentHistory.studentEmail}
@@ -146,7 +146,7 @@ function StudentMetricsContent() {
           >
             <Grid sx={{ textAlign: 'center' }}>
               <Typography variant="h6" fontWeight="bold">
-                Total Questions
+                Total Print Requests
               </Typography>
               <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
                 {studentHistory.totalQuestions}
@@ -154,7 +154,7 @@ function StudentMetricsContent() {
             </Grid>
             <Grid sx={{ textAlign: 'center' }}>
               <Typography variant="h6" fontWeight="bold">
-                Questions Helped
+                Requests Completed
               </Typography>
               <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
                 {studentHistory.totalHelpedQuestions}
@@ -162,7 +162,7 @@ function StudentMetricsContent() {
             </Grid>
             <Grid sx={{ textAlign: 'center' }}>
               <Typography variant="h6" fontWeight="bold">
-                Total Time Helped
+                Total Call Time
               </Typography>
               <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
                 {studentHistory.totalTimeHelped}
@@ -174,20 +174,20 @@ function StudentMetricsContent() {
         {/* Question History Table */}
         <Card>
           <Typography variant="h6" sx={{ m: 2 }} fontWeight="bold">
-            All Questions ({studentHistory.questions.length})
+            All Print Requests ({studentHistory.questions.length})
           </Typography>
           <TableContainer sx={{ maxHeight: 600 }}>
-            <Table stickyHeader aria-label="question history table">
+            <Table stickyHeader aria-label="print request history table">
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ minWidth: 150 }}>Date/Time</TableCell>
-                  <TableCell sx={{ minWidth: 120 }}>Assignment</TableCell>
-                  <TableCell sx={{ minWidth: 200 }}>Question</TableCell>
+                  <TableCell sx={{ minWidth: 120 }}>Machine</TableCell>
+                  <TableCell sx={{ minWidth: 200 }}>Part</TableCell>
                   <TableCell sx={{ minWidth: 100 }}>Location</TableCell>
                   <TableCell sx={{ minWidth: 100 }}>Status</TableCell>
                   <TableCell sx={{ minWidth: 80 }}>Wait (min)</TableCell>
-                  <TableCell sx={{ minWidth: 80 }}>Help (min)</TableCell>
-                  <TableCell sx={{ minWidth: 120 }}>Helped By</TableCell>
+                  <TableCell sx={{ minWidth: 80 }}>Call (min)</TableCell>
+                  <TableCell sx={{ minWidth: 120 }}>Called By</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -201,7 +201,7 @@ function StudentMetricsContent() {
                       <TableCell sx={{ wordBreak: 'break-word' }}>{row.location}</TableCell>
                       <TableCell>
                         <Chip
-                          label={row.finished_by === 'helped' ? 'Helped' : 'Removed'}
+                          label={row.finished_by === 'helped' ? 'Completed' : 'Removed'}
                           color={row.finished_by === 'helped' ? 'success' : 'default'}
                           size="small"
                         />

@@ -3,6 +3,7 @@ import { Box } from '@mui/material';
 import { Doc } from '../../../../../convex/_generated/dataModel';
 
 const STATUS_LABEL: Partial<Record<Doc<'ohq'>['status'], string>> = {
+  being_helped: 'Called',
   fixing_question: 'Updating',
   frozen: 'Frozen',
   cooldown_violation: 'Cooldown',
@@ -24,7 +25,7 @@ export default function StudentStatus(props: { student: Doc<'ohq'>; isOwnHelp: b
           color: theme.palette.ink.muted,
         })}
       >
-        {student.helping_ta?.preferred_name} helping
+        Called by {student.helping_ta?.preferred_name}
       </Box>
     );
   }
