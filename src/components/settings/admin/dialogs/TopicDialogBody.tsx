@@ -1,32 +1,22 @@
-import { FormControl, Grid, InputLabel, MenuItem, Select, TextField } from '@mui/material';
+import { Grid, TextField } from '@mui/material';
 
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 export default function TopicDialogBody(props) {
-  const { name, setName, category, setCategory, startDate, setStartDate, endDate, setEndDate } =
-    props;
+  const { name, setName, startDate, setStartDate, endDate, setEndDate } = props;
 
   return (
     <Grid container spacing={3}>
-      <Grid className="d-flex" item xs={6}>
+      <Grid className="d-flex" item xs={12}>
         <TextField
-          label="Topic Name"
+          label="Machine Name"
+          placeholder="e.g. 3D Printer"
           variant="standard"
           required
           fullWidth
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-      </Grid>
-      <Grid className="d-flex" item xs={6}>
-        <FormControl variant="standard" fullWidth required>
-          <InputLabel>Category</InputLabel>
-          <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)}>
-            <MenuItem value={'Written'}>Written</MenuItem>
-            <MenuItem value={'Programming'}>Programming</MenuItem>
-            <MenuItem value={'Other'}>Other</MenuItem>
-          </Select>
-        </FormControl>
       </Grid>
       <Grid className="d-flex" item xs={6}>
         <DateTimePicker

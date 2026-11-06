@@ -161,7 +161,9 @@ export const getAllAssignments = query({
   handler: async (ctx, args) => {
     const curr_sem = await getCurrentSemester(ctx, args.courseId);
 
-    const other_assignment_id = curr_sem.other_assignment!;
+    // Legacy "Other" machine, if this semester still has one. The admin list
+    // hides it; it is undefined for semesters created after it was removed.
+    const other_assignment_id = curr_sem.other_assignment;
 
     const all_assignments = await ctx.db
       .query('assignments')
@@ -186,7 +188,7 @@ export async function getCurrentAssignments(ctx: QueryCtx, courseId: Id<'courses
     .filter((x) => x.lt(x.field('start_date_ms'), curr_date))
     .collect();
 
-  const other_assignment = (await ctx.db.get(curr_sem.other_assignment!))!;
-
-  return [...curr_assignments, other_assignment];
+  // The legacy "Other" machine (start/end 0) never matches the date range, so
+  // only admin-configured machines are offered.
+  return curr_assignments;
 }

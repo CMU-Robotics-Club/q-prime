@@ -59,19 +59,19 @@ export const createCourse = mutation({
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
     if (!user_id) {
-      throw new ConvexError('Must be signed in to create a course');
+      throw new ConvexError('Must be signed in to create an event');
     }
 
     const user = await ctx.db.get(user_id);
     const caller_email = (user as { email?: string } | null)?.email;
     if (!caller_email) {
-      throw new ConvexError('Your account has no email; cannot create a course');
+      throw new ConvexError('Your account has no email; cannot create an event');
     }
 
     const already_owned = await findOwnedCourseForEmail(ctx, caller_email);
     if (already_owned) {
       throw new ConvexError(
-        `You already own a course (${already_owned.display_name}); each account can own only one.`,
+        `You already own an event (${already_owned.display_name}); each account can own only one.`,
       );
     }
 
@@ -102,7 +102,7 @@ export const createCourse = mutation({
       .withIndex('by_slug', (q) => q.eq('slug', args.slug))
       .unique();
     if (existing) {
-      throw new ConvexError('A course with that slug already exists');
+      throw new ConvexError('An event with that slug already exists');
     }
 
     // The caller must be in the owner_emails list — otherwise creating a course
@@ -124,19 +124,8 @@ export const createCourse = mutation({
       enable_blacklist: false,
       whitelist: [],
       blacklist: [],
+      // No catch-all "Other" machine; admins add the real machines in settings.
       other_assignment: undefined,
-    });
-
-    const other_assignment = await ctx.db.insert('assignments', {
-      name: 'Other',
-      semester_id: new_sem,
-      assignment_type: undefined,
-      start_date_ms: 0,
-      end_date_ms: 0,
-    });
-
-    await ctx.db.patch(new_sem, {
-      other_assignment: other_assignment,
     });
 
     await ctx.db.insert('globalSettings', {

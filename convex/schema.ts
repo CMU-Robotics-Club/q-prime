@@ -69,6 +69,8 @@ export default defineSchema({
     whitelist: v.array(v.string()),
     blacklist: v.array(v.string()),
 
+    // Legacy catch-all "Other" machine. No longer created or shown; kept so
+    // existing semesters still validate.
     other_assignment: v.optional(v.id('assignments')),
   }).index('by_course_and_name', ['course_id', 'name']),
 
@@ -144,6 +146,7 @@ export default defineSchema({
 
     question: v.string(),
     location: v.string(),
+    team_number: v.optional(v.number()), // unset on rows archived before team numbers existed
 
     created_by: v.union(v.literal('student'), v.literal('TA')),
     finished_by: v.union(v.literal('helped'), v.literal('removed')),
@@ -189,6 +192,7 @@ export default defineSchema({
     position: v.number(),
     question: v.string(),
     location: v.string(),
+    team_number: v.optional(v.number()), // unset on entries created before team numbers existed
 
     entry_time_ms: v.number(),
 
