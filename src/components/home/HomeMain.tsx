@@ -12,7 +12,7 @@ import ConvexNotifHandler from '../common/ConvexNotifHandler';
 import { useCourseId } from '../../contexts/CourseContext';
 
 function HomeMain() {
-  const gitHubLink = 'https://github.com/cmu15122/q-issues/issues';
+  const gitHubLink = 'https://github.com/CMU-Robotics-Club/q-prime';
   const courseId = useCourseId();
 
   const [mainPage, setMainPage] = useState<JSX.Element | null>(null);
@@ -42,14 +42,14 @@ function HomeMain() {
       // you are not logged in
       setMainPage(null);
     } else if (userData) {
-      setMainPage((
+      setMainPage(
         <Typography variant="h3" sx={{ textAlign: 'center', p: 4 }}>
           Please log in with an email account ending with:{' '}
           {queueData?.allowed_email_domains.join(', ')}
-        </Typography>
-      ));
+        </Typography>,
+      );
     } else {
-      setMainPage((<></>));
+      setMainPage(<></>);
     }
   }, [isAuthenticated, isTA]);
 
