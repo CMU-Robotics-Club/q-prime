@@ -124,19 +124,8 @@ export const createCourse = mutation({
       enable_blacklist: false,
       whitelist: [],
       blacklist: [],
+      // No catch-all "Other" machine; admins add the real machines in settings.
       other_assignment: undefined,
-    });
-
-    const other_assignment = await ctx.db.insert('assignments', {
-      name: 'Other',
-      semester_id: new_sem,
-      assignment_type: undefined,
-      start_date_ms: 0,
-      end_date_ms: 0,
-    });
-
-    await ctx.db.patch(new_sem, {
-      other_assignment: other_assignment,
     });
 
     await ctx.db.insert('globalSettings', {

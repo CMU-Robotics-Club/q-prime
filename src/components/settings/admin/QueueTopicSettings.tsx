@@ -23,6 +23,7 @@ import { useCourseId } from '../../../contexts/CourseContext';
 export default function QueueTopicSettings() {
   const courseId = useCourseId();
   const currAssignments = useQuery(api.home.home_get.getAllAssignments, { courseId });
+  // Hide the legacy "Other" machine on semesters that still have one.
   let assignmentsToList = currAssignments ? [...currAssignments.all_assignments] : [];
   assignmentsToList = assignmentsToList.filter(
     (assignment) => assignment._id !== currAssignments?.other_assignment_id,

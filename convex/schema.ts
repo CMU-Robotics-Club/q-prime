@@ -69,6 +69,8 @@ export default defineSchema({
     whitelist: v.array(v.string()),
     blacklist: v.array(v.string()),
 
+    // Legacy catch-all "Other" machine. No longer created or shown; kept so
+    // existing semesters still validate.
     other_assignment: v.optional(v.id('assignments')),
   }).index('by_course_and_name', ['course_id', 'name']),
 
