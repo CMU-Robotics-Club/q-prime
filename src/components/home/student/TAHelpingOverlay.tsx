@@ -33,19 +33,21 @@ export default function TAHelpingOverlay(props: { open: boolean }) {
     if (!open) setDismissed(false);
   }, [open]);
 
-  const taName = studentData?.helping_ta?.preferred_name || 'An officer';
-  const machineName = studentData?.assignment_name || 'machine';
+  const officerName = studentData?.helping_ta?.preferred_name;
+  const machineName = studentData?.assignment_name;
 
   return (
     <DialogShell
       open={open && !dismissed}
       onClose={() => setDismissed(true)}
-      title={`${taName} is ready for your team`}
+      title={`${officerName || 'An officer'} is ready for your team`}
       secondaryAction={{ label: 'Got it', onClick: () => setDismissed(true) }}
     >
       <Box>
         <Typography sx={{ fontSize: 14, color: 'ink.primary', mb: 2 }}>
-          Head to the <b>{machineName}</b> with your files.
+          {/* There can be several of each machine, so don't point the team at one. */}
+          Your {machineName ? <b>{machineName}</b> : 'print'} request is up — come find{' '}
+          {officerName || 'an officer'} to get started.
         </Typography>
         {studentData?.question && (
           <Typography sx={{ fontSize: 14, color: 'ink.secondary', mb: 2 }}>
