@@ -61,9 +61,7 @@ function StudentMain() {
 
       <MessageOverlay
         open={studentData?.has_unread_messages ?? false}
-        removeFromQueue={removeFromQueue}
         dismissMessage={dismissMessage}
-        handleClose={() => {}}
       />
     </div>
   );

@@ -8,11 +8,7 @@ import DialogShell from '../../common/dialogs/DialogShell';
 import { t, s } from '../../../themes/styles';
 
 export default function MessageOverlay(props) {
-  const { open, handleClose, removeFromQueue, dismissMessage } = props;
-  const leaveQueue = () => {
-    removeFromQueue();
-    handleClose();
-  };
+  const { open, dismissMessage } = props;
   const courseId = useCourseId();
 
   const userData = useQuery(api.home.home_get.getUserData, { courseId });
@@ -26,9 +22,8 @@ export default function MessageOverlay(props) {
     <DialogShell
       open={open}
       onClose={dismissMessage}
-      title={lastMessageAuthor ? `Note from ${lastMessageAuthor}` : 'You got a note'}
-      primaryAction={{ label: 'Stay on the queue', onClick: dismissMessage }}
-      secondaryAction={{ label: "I'm done", onClick: leaveQueue }}
+      title={lastMessageAuthor ? `Message from ${lastMessageAuthor}` : 'You got a message'}
+      primaryAction={{ label: 'OK', onClick: dismissMessage }}
     >
       <Box sx={[s.hairlineBox, { p: 2 }]}>
         <Typography sx={[t.body, { whiteSpace: 'pre-wrap' }]}>{lastMessageText}</Typography>
