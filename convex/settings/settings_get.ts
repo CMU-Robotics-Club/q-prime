@@ -22,7 +22,7 @@ async function ensureAuthAndTAOrOwner(ctx: QueryCtx, courseId: Id<'courses'>) {
   const isOwner = curr_sem.owner_emails.includes(user_data.email!);
   const isTA = user_data.kind === 'TA';
   if (!isTA && !isOwner) {
-    throw new ConvexError('User is not a TA or owner');
+    throw new ConvexError('User is not an officer or owner');
   }
 }
 
