@@ -91,7 +91,7 @@ export default function Announcements() {
             </Box>
             {isTA && (
               <Typography sx={[t.bodyMuted, { mt: 0.5 }]}>
-                Announcements are public to all students.
+                Announcements are visible to all teams.
               </Typography>
             )}
           </Box>

@@ -73,7 +73,7 @@ export default function Graph() {
   return (
     <div>
       <Typography variant="h5" sx={{ mt: 4, ml: 10 }} fontWeight="bold">
-        Number of Questions per Day (in the last week)
+        Print Requests per Day (last week)
       </Typography>
 
       <div style={{ height: '40vh', width: 'auto', position: 'relative' }}>
@@ -109,7 +109,7 @@ export default function Graph() {
               y: {
                 title: {
                   display: true,
-                  text: 'Number of Students',
+                  text: 'Print Requests',
                   font: {
                     size: 16,
                   },
@@ -127,7 +127,7 @@ export default function Graph() {
             labels: numStudentsPerDayLastWeek.map((day) => dateFormatter(day.day)),
             datasets: [
               {
-                label: 'Number of Students',
+                label: 'Print Requests',
                 data: numStudentsPerDayLastWeek.map((day) => day.students),
                 fill: false,
                 backgroundColor: theme.palette.secondary.main,
@@ -141,7 +141,7 @@ export default function Graph() {
       </div>
 
       <Typography variant="h5" sx={{ mt: 4, ml: 10 }} fontWeight="bold">
-        Number of Questions per Day (semester)
+        Print Requests per Day (this semester)
       </Typography>
 
       <div style={{ height: '40vh', width: 'auto', position: 'relative' }}>
@@ -177,7 +177,7 @@ export default function Graph() {
               y: {
                 title: {
                   display: true,
-                  text: 'Number of Students',
+                  text: 'Print Requests',
                   font: {
                     size: 16,
                   },
@@ -195,7 +195,7 @@ export default function Graph() {
             labels: numStudentsOverall.map((day) => dateFormatter(day.day)),
             datasets: [
               {
-                label: 'Number of Students',
+                label: 'Print Requests',
                 data: numStudentsOverall.map((day) => day.students),
                 fill: false,
                 backgroundColor: theme.palette.secondary.main,
@@ -209,7 +209,7 @@ export default function Graph() {
       </div>
 
       <Typography variant="h5" sx={{ mt: 4, ml: 10 }} fontWeight="bold">
-        Number of Questions per Day of the Week
+        Print Requests per Day of the Week
       </Typography>
 
       <div style={{ height: '40vh', width: 'auto', position: 'relative' }}>
@@ -245,7 +245,7 @@ export default function Graph() {
               y: {
                 title: {
                   display: true,
-                  text: 'Number of Students',
+                  text: 'Print Requests',
                   font: {
                     size: 16,
                   },
@@ -263,7 +263,7 @@ export default function Graph() {
             labels: numStudentsPerDay.map((day) => day.day),
             datasets: [
               {
-                label: 'Number of Students',
+                label: 'Print Requests',
                 data: numStudentsPerDay.map((day) => day.students),
                 backgroundColor: theme.palette.secondary.main,
                 borderColor: theme.palette.secondary.main,

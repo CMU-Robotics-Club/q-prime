@@ -21,7 +21,7 @@ export default function RemoveQConfirm(props) {
       }}
       secondaryAction={{ label: 'Cancel', onClick: handleClose }}
     >
-      <Typography sx={t.bodyMuted}>You will forfeit your position on the queue.</Typography>
+      <Typography sx={t.bodyMuted}>Your team will lose its spot in the queue.</Typography>
     </DialogShell>
   );
 }

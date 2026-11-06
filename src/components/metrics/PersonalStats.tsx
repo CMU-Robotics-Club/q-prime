@@ -89,7 +89,7 @@ export default function PersonalStats() {
         >
           <Grid sx={{ textAlign: 'center' }}>
             <Typography variant="h6" fontWeight="bold">
-              No. of Questions Answered
+              Print Requests Served
             </Typography>
             <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
               {numQuestionsAnswered}
@@ -97,7 +97,7 @@ export default function PersonalStats() {
           </Grid>
           <Grid sx={{ textAlign: 'center' }}>
             <Typography variant="h6" fontWeight="bold">
-              Avg. Time Spent Per Question (min)
+              Avg. Service Time per Request (min)
             </Typography>
             <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
               {averageHelpTime}
@@ -110,7 +110,7 @@ export default function PersonalStats() {
                   <TableRow>
                     <TableCell sx={{ minWidth: 125 }}>Email</TableCell>
                     <TableCell sx={{ minWidth: 125 }}>Name</TableCell>
-                    <TableCell>Question</TableCell>
+                    <TableCell>Part</TableCell>
                     <TableCell>Time Start</TableCell>
                     <TableCell>Time End</TableCell>
                   </TableRow>

@@ -17,7 +17,7 @@ export default function CumulativeStats() {
   return (
     <div>
       <Typography variant="h5" sx={{ mt: 4, ml: 10 }} fontWeight="bold">
-        Cumulative Staff Statistics
+        Cumulative Officer Statistics
       </Typography>
       <Card
         sx={{
@@ -33,7 +33,7 @@ export default function CumulativeStats() {
       >
         <Grid sx={{ px: 4, py: 4, alignItems: 'center', textAlign: 'center' }}>
           <Typography variant="h6" fontWeight="bold">
-            Total No. of Questions Answered
+            Total Print Requests Served
           </Typography>
           <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
             {numQuestions}
@@ -43,7 +43,7 @@ export default function CumulativeStats() {
         <Divider orientation="vertical" variant="middle" flexItem />
         <Grid sx={{ px: 4, py: 4, alignItems: 'center', textAlign: 'center' }}>
           <Typography variant="h6" fontWeight="bold">
-            Average Time Spent per Question (min)
+            Average Service Time per Request (min)
           </Typography>
           <Typography variant="h3" sx={{ mt: 2 }} fontWeight="bold">
             {avgTimePerQuestion}
