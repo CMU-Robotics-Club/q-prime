@@ -11,7 +11,7 @@ export default function AnnouncementDialogBody(props) {
       multiline
       fullWidth
       rows={4}
-      defaultValue={content}
+      value={content}
       onChange={(event) => setContent(event.target.value)}
     />
   );

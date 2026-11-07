@@ -109,11 +109,25 @@ export const createAnnouncement = mutation({
   },
 });
 
+// Announcements are addressed by index, so a list changed by another officer
+// (or a stale page) could point idx at a different announcement. When the
+// caller sends the text it expects at idx, refuse instead of touching the
+// wrong one. Optional so pages loaded before this check can still call these.
+function ensureAnnouncementAt(announcements: string[], idx: number, expected?: string) {
+  if (!Number.isInteger(idx) || idx < 0 || idx >= announcements.length) {
+    throw new ConvexError('Invalid announcement index');
+  }
+  if (expected !== undefined && announcements[idx] !== expected) {
+    throw new ConvexError('This announcement was changed or removed by someone else. Try again.');
+  }
+}
+
 export const updateAnnouncement = mutation({
   args: {
     courseId: v.id('courses'),
     idx: v.number(),
     content: v.string(),
+    expected_content: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -121,9 +135,7 @@ export const updateAnnouncement = mutation({
 
     const globalSettings = await getGlobalSettings(ctx, args.courseId);
 
-    if (args.idx < 0 || args.idx >= globalSettings.announcements.length) {
-      throw new ConvexError('Invalid announcement index');
-    }
+    ensureAnnouncementAt(globalSettings.announcements, args.idx, args.expected_content);
 
     const curr_announcements = globalSettings.announcements;
     curr_announcements[args.idx] = args.content;
@@ -138,6 +150,7 @@ export const deleteAnnouncement = mutation({
   args: {
     courseId: v.id('courses'),
     idx: v.number(),
+    expected_content: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -145,9 +158,7 @@ export const deleteAnnouncement = mutation({
 
     const globalSettings = await getGlobalSettings(ctx, args.courseId);
 
-    if (args.idx < 0 || args.idx >= globalSettings.announcements.length) {
-      throw new ConvexError('Invalid announcement index');
-    }
+    ensureAnnouncementAt(globalSettings.announcements, args.idx, args.expected_content);
 
     const curr_announcements = globalSettings.announcements;
     curr_announcements.splice(args.idx, 1);

@@ -31,28 +31,30 @@ export default function Announcements() {
   const queueData = useQuery(api.home.home_get.getQueueData, { courseId });
   const userData = useQuery(api.home.home_get.getUserData, { courseId });
   const isTA = userData && userData.user_kind === 'TA';
-  const rows = queueData?.announcements || [];
+  // Newest first. Keep each announcement's index in the stored (oldest-first)
+  // list, since that is what the update and delete mutations take.
+  const rows = (queueData?.announcements || []).map((content, idx) => ({ content, idx })).reverse();
 
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [content, setContent] = useState('');
-  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [selected, setSelected] = useState<{ content: string; idx: number } | null>(null);
 
   const handleAddDialog = () => {
     setOpenAdd(true);
     setContent('');
   };
 
-  const handleEditDialog = (row, idx) => {
+  const handleEditDialog = (row: { content: string; idx: number }) => {
     setOpenEdit(true);
-    setSelectedIdx(idx);
+    setSelected(row);
     setContent(row.content);
   };
 
-  const handleDeleteDialog = (idx) => {
+  const handleDeleteDialog = (row: { content: string; idx: number }) => {
     setOpenDelete(true);
-    setSelectedIdx(idx);
+    setSelected(row);
   };
 
   const handleClose = () => {
@@ -72,13 +74,20 @@ export default function Announcements() {
 
   const handleEdit = async (event) => {
     event.preventDefault();
-    await updateAnnouncementMutation({ courseId, idx: selectedIdx!, content }).then(() =>
-      handleClose(),
-    );
+    await updateAnnouncementMutation({
+      courseId,
+      idx: selected!.idx,
+      content,
+      expected_content: selected!.content,
+    }).then(() => handleClose());
   };
 
   const handleDelete = async () => {
-    await deleteAnnouncementMutation({ courseId, idx: selectedIdx! }).then(() => handleClose());
+    await deleteAnnouncementMutation({
+      courseId,
+      idx: selected!.idx,
+      expected_content: selected!.content,
+    }).then(() => handleClose());
   };
 
   return (
@@ -110,52 +119,49 @@ export default function Announcements() {
           <TableContainer sx={{ maxHeight: 200 }}>
             <Table aria-label="announcementsTable" stickyHeader>
               <TableBody>
-                {rows
-                  .slice()
-                  .reverse()
-                  .map((row, index) => (
-                    <ItemRow key={index} index={index} rowKey={index}>
-                      <TableCell component="th" scope="row" sx={{ pl: 3.25 }}>
-                        <Typography
-                          sx={[
-                            t.body,
-                            {
-                              whiteSpace: 'pre-line',
-                              '& a': { color: 'forest.main', cursor: 'pointer' },
-                            },
-                          ]}
+                {rows.map((row, index) => (
+                  <ItemRow key={row.idx} index={index} rowKey={row.idx}>
+                    <TableCell component="th" scope="row" sx={{ pl: 3.25 }}>
+                      <Typography
+                        sx={[
+                          t.body,
+                          {
+                            whiteSpace: 'pre-line',
+                            '& a': { color: 'forest.main', cursor: 'pointer' },
+                          },
+                        ]}
+                      >
+                        <Linkify options={{ target: '_blank' }}>{row.content}</Linkify>
+                      </Typography>
+                    </TableCell>
+                    <TableCell sx={{ width: 120 }}>
+                      {isTA && (
+                        <Stack
+                          direction="row"
+                          spacing={0.5}
+                          justifyContent="flex-end"
+                          sx={{ mr: 1.5 }}
                         >
-                          <Linkify options={{ target: '_blank' }}>{row}</Linkify>
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ width: 120 }}>
-                        {isTA && (
-                          <Stack
-                            direction="row"
-                            spacing={0.5}
-                            justifyContent="flex-end"
-                            sx={{ mr: 1.5 }}
+                          <OhqButton
+                            variant="icon"
+                            aria-label="edit"
+                            onClick={() => handleEditDialog(row)}
                           >
-                            <OhqButton
-                              variant="icon"
-                              aria-label="edit"
-                              onClick={() => handleEditDialog(row, index)}
-                            >
-                              <Edit fontSize="small" />
-                            </OhqButton>
-                            <OhqButton
-                              variant="icon"
-                              tone="danger"
-                              aria-label="delete"
-                              onClick={() => handleDeleteDialog(index)}
-                            >
-                              <Delete fontSize="small" />
-                            </OhqButton>
-                          </Stack>
-                        )}
-                      </TableCell>
-                    </ItemRow>
-                  ))}
+                            <Edit fontSize="small" />
+                          </OhqButton>
+                          <OhqButton
+                            variant="icon"
+                            tone="danger"
+                            aria-label="delete"
+                            onClick={() => handleDeleteDialog(row)}
+                          >
+                            <Delete fontSize="small" />
+                          </OhqButton>
+                        </Stack>
+                      )}
+                    </TableCell>
+                  </ItemRow>
+                ))}
               </TableBody>
             </Table>
           </TableContainer>
