@@ -23,15 +23,19 @@ export default function YourEntry(props) {
     ? 'Frozen in line — you will not advance until an officer approves your request.'
     : 'Frozen in line — wait for your cooldown to end before joining the queue again.';
 
-  const position =
-    studentData && queueData
-      ? Math.max(studentData.position + 1 - (queueData.num_students - queueData.num_unhelped), 1)
-      : 0;
+  // Place in line for this team's machine. Teams ahead count until they leave
+  // the queue, even after they've been called.
+  const position = userData?.machine_position ?? 0;
+  const teamsAhead = Math.max(position - 1, 0);
 
   const estimatedMins =
-    !queueData || !studentData || queueData.num_tas * studentData.position === 0
+    !queueData || queueData.num_tas === 0
       ? 0
-      : Math.floor((queueData.mins_per_student / queueData.num_tas) * studentData.position);
+      : Math.floor((queueData.mins_per_student / queueData.num_tas) * teamsAhead);
+
+  // Self-serve has no officer call times to estimate from, so show the line length instead.
+  const selfServe = queueData?.self_serve_mode ?? false;
+  const isNextUp = selfServe && position === 1 && studentData?.status === 'waiting';
 
   const isPaused =
     studentData &&
@@ -56,13 +60,34 @@ export default function YourEntry(props) {
                 lineHeight: 1.3,
               })}
             >
-              ~{estimatedMins} minute{estimatedMins === 1 ? '' : 's'} wait
+              {selfServe
+                ? `${teamsAhead} team${teamsAhead === 1 ? '' : 's'} ahead of you`
+                : `~${estimatedMins} minute${estimatedMins === 1 ? '' : 's'} wait`}
+            </Typography>
+            <Typography sx={[t.bodyMuted, { mt: 0.25 }]}>
+              in line for {studentData?.assignment_name || 'your machine'}
             </Typography>
           </Box>
           <OhqButton variant="icon" tone="danger" aria-label="remove" onClick={openRemoveOverlay}>
             <DeleteIcon fontSize="small" />
           </OhqButton>
         </Stack>
+
+        {isNextUp && (
+          <Box
+            sx={(theme) => ({
+              border: `1px solid ${theme.palette.forest.main}`,
+              borderRadius: '4px',
+              p: 1.25,
+              mt: 2,
+            })}
+          >
+            <Typography sx={{ fontSize: 13.5, color: 'ink.primary' }}>
+              You're at the front of the line. When a machine opens up, start your print, then
+              remove your team from the queue with the trash button.
+            </Typography>
+          </Box>
+        )}
 
         {isPaused && (
           <Box sx={[s.amberWarning, { mt: 2 }]}>

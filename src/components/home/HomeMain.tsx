@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
 import SharedMain from './shared/SharedMain';
+import PublicQueue from './shared/PublicQueue';
 import StudentMain from './student/StudentMain';
 import TAMain from './ta/TAMain';
 import Footer from './Footer';
@@ -59,6 +60,7 @@ function HomeMain() {
       <Container sx={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
         <SharedMain />
         {mainPage}
+        {userData === null && <PublicQueue />}
         <Footer gitHubLink={gitHubLink} />
       </Container>
     </>

@@ -3,9 +3,10 @@ import { useState, useEffect, useMemo } from 'react';
 import ListCard from '../../common/table/ListCard';
 import StudentEntry from './StudentEntry';
 import OhqButton from '../../common/buttons/OhqButton';
+import SelfServeToggle from './SelfServeToggle';
 
 import FilterOptions from './dialogs/FilterOptions';
-import { Popover } from '@mui/material';
+import { Popover, Stack } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
 import { useQuery, useMutation } from 'convex/react';
@@ -127,6 +128,15 @@ export default function StudentEntries() {
       />
     );
   }, [filteredLocations, filteredTopics, setFilteredLocations, setFilteredTopics]);
+
+  const HeaderTail = useMemo(() => {
+    return () => (
+      <Stack direction="row" alignItems="center" spacing={2}>
+        <SelfServeToggle />
+        <FilterWithProps />
+      </Stack>
+    );
+  }, [FilterWithProps]);
   const helpStudentMutation = useMutation(api.home.home_mutate.helpStudent);
   const unhelpStudentMutation = useMutation(api.home.home_mutate.unhelpStudent);
   const removeStudentMutation = useMutation(api.home.home_mutate.removeStudent);
@@ -169,7 +179,7 @@ export default function StudentEntries() {
   const handleClickUnfreeze = (_index) => {};
 
   return (
-    <ListCard title="Teams" HeaderTailComp={FilterWithProps}>
+    <ListCard title="Teams" HeaderTailComp={HeaderTail}>
       {filteredStudents.map((student, index) => (
         <StudentEntry
           isHelping={isHelping}

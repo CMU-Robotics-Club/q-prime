@@ -40,6 +40,9 @@ export default defineSchema({
     // current queue status
     is_frozen: v.boolean(),
     announcements: v.array(v.string()),
+    // Self-serve: no officer calls teams; the team at the front of a machine's
+    // line is notified and removes itself once its print starts. Unset = off.
+    self_serve_mode: v.optional(v.boolean()),
 
     // Per-course branding. Both are optional hex strings ("#RRGGBB"); when
     // unset, the app falls back to the default forest/amber tokens. Served
@@ -220,5 +223,6 @@ export default defineSchema({
   })
     .index('by_student', ['student_id'])
     .index('by_sem_and_position', ['semester_id', 'position'])
+    .index('by_sem_and_assignment_and_position', ['semester_id', 'assignment_id', 'position'])
     .index('by_sem_and_status', ['semester_id', 'status']),
 });

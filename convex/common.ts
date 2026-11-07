@@ -1,4 +1,4 @@
-import { internalMutation, internalQuery, QueryCtx } from './_generated/server';
+import { internalMutation, internalQuery, MutationCtx, QueryCtx } from './_generated/server';
 import { ConvexError, v } from 'convex/values';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import { Doc, Id } from './_generated/dataModel';
@@ -221,6 +221,61 @@ export async function getQueueEntry(
 }
 
 /**
+ * 1-based place in line among the entries for the same machine. Every entry
+ * ahead counts, including called and paused ones, so a team only moves up when
+ * an entry ahead of it leaves the queue.
+ */
+export async function getMachinePosition(ctx: QueryCtx, entry: Doc<'ohq'>) {
+  const ahead = await ctx.db
+    .query('ohq')
+    .withIndex('by_sem_and_assignment_and_position', (q) =>
+      q
+        .eq('semester_id', entry.semester_id)
+        .eq('assignment_id', entry.assignment_id)
+        .lt('position', entry.position),
+    )
+    .collect();
+  return ahead.length + 1;
+}
+
+/**
+ * The first entry in each machine's line, keyed by machine.
+ */
+export async function getMachineFronts(ctx: QueryCtx, semester_id: Id<'semesters'>) {
+  const queue = await ctx.db
+    .query('ohq')
+    .withIndex('by_sem_and_position', (q) => q.eq('semester_id', semester_id))
+    .order('asc')
+    .collect();
+
+  const fronts = new Map<Id<'assignments'>, Doc<'ohq'>>();
+  for (const entry of queue) {
+    if (!fronts.has(entry.assignment_id)) {
+      fronts.set(entry.assignment_id, entry);
+    }
+  }
+  return fronts;
+}
+
+/**
+ * Self-serve: tell a team it is first in line for its machine. Called and
+ * paused teams are skipped since they can't go start a print on their own.
+ */
+export async function notifyFrontOfLine(ctx: MutationCtx, entry: Doc<'ohq'>) {
+  if (entry.status !== 'waiting') {
+    return;
+  }
+
+  const student = (await ctx.db.get(entry.student_id))!;
+  await sendNotification(
+    ctx,
+    student.semester_user_id,
+    `You're next for ${entry.assignment_name}`,
+    'When a machine opens up, start your print, then remove your team from the queue.',
+  );
+}
+
+/**
  * Fetches an assignment and asserts it belongs to courseId's current semester.
  * Throws if the assignment doesn't exist or belongs to a different course.
  */
@@ -292,6 +347,13 @@ export const removeQueueEntry = internalMutation({
     const semester_id = queue_entry.semester_id;
     const position_to_remove = queue_entry.position;
 
+    // In self-serve mode, notify every team that reaches the front of its
+    // machine's line. Check all machines, not just this entry's: a removal can
+    // also move a waiting team past a paused one.
+    const semester = (await ctx.db.get(semester_id))!;
+    const self_serve = (await getGlobalSettings(ctx, semester.course_id)).self_serve_mode ?? false;
+    const fronts_before = self_serve ? await getMachineFronts(ctx, semester_id) : null;
+
     await ctx.db.delete(queue_entry._id);
 
     const all_greater_queue_entries = await ctx.db
@@ -334,6 +396,15 @@ export const removeQueueEntry = internalMutation({
         }
 
         await ctx.db.patch(q._id, { position: q.position - 1 });
+      }
+    }
+
+    if (fronts_before) {
+      const fronts_after = await getMachineFronts(ctx, semester_id);
+      for (const [assignment_id, front] of fronts_after) {
+        if (fronts_before.get(assignment_id)?._id !== front._id) {
+          await notifyFrontOfLine(ctx, front);
+        }
       }
     }
 
@@ -727,12 +798,21 @@ export const internalSendNotification = internalMutation({
     body: v.string(),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.semester_user, {
-      notification: {
-        title: args.title,
-        body: args.body,
-        timestamp: new Date().getTime(),
-      },
-    });
+    await sendNotification(ctx, args.semester_user, args.title, args.body);
   },
 });
+
+export async function sendNotification(
+  ctx: MutationCtx,
+  semester_user: Id<'semesterUsers'>,
+  title: string,
+  body: string,
+) {
+  await ctx.db.patch(semester_user, {
+    notification: {
+      title: title,
+      body: body,
+      timestamp: new Date().getTime(),
+    },
+  });
+}

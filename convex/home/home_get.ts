@@ -6,6 +6,7 @@ import {
   getCurrentSemester,
   getCurrentUser,
   getGlobalSettings,
+  getMachinePosition,
   getQueueEntry,
   getQueueLength,
   getWaittimeData,
@@ -37,6 +38,7 @@ export const getQueueData = query({
     return {
       title: globalSettings.course_name,
       is_frozen: globalSettings.is_frozen,
+      self_serve_mode: globalSettings.self_serve_mode ?? false,
       announcements: globalSettings.announcements,
       allowed_email_domains: globalSettings.allowed_email_domains,
       current_locations: current_locations,
@@ -82,6 +84,7 @@ export const getUserData = query({
     } | null;
 
     let student_data: Doc<'ohq'> | null = null;
+    let machine_position: number | null = null;
     let ta_data: TAData = null;
 
     if (user_data.kind === 'TA') {
@@ -102,6 +105,9 @@ export const getUserData = query({
       const student = await getStudent(ctx, user_data.sem_user_id);
 
       student_data = await getQueueEntry(ctx, args.courseId, student._id);
+      if (student_data) {
+        machine_position = await getMachinePosition(ctx, student_data);
+      }
     }
 
     // ---- notification ----
@@ -137,6 +143,7 @@ export const getUserData = query({
       user_kind: user_data.kind,
       ta_data: ta_data as typeof ta_data | null,
       student_data: student_data as typeof student_data | null,
+      machine_position: machine_position,
       notification: notification,
       valid_email: valid_email,
     };
@@ -153,6 +160,36 @@ export const getAllStudents = query({
       .withIndex('by_sem_and_position', (q) => q.eq('semester_id', curr_sem._id))
       .order('asc')
       .collect();
+  },
+});
+
+/**
+ * The queue as shown to logged-out visitors: team number, machine, and place
+ * in that machine's line. No names or emails.
+ */
+export const getPublicQueue = query({
+  args: { courseId: v.id('courses') },
+  handler: async (ctx, args) => {
+    const curr_sem = await getCurrentSemester(ctx, args.courseId);
+    const queue = await ctx.db
+      .query('ohq')
+      .withIndex('by_sem_and_position', (q) => q.eq('semester_id', curr_sem._id))
+      .order('asc')
+      .collect();
+
+    const machine_counts = new Map<Id<'assignments'>, number>();
+    return queue.map((entry) => {
+      const machine_position = (machine_counts.get(entry.assignment_id) ?? 0) + 1;
+      machine_counts.set(entry.assignment_id, machine_position);
+
+      return {
+        team_number: entry.team_number,
+        assignment_id: entry.assignment_id,
+        assignment_name: entry.assignment_name,
+        machine_position: machine_position,
+        is_called: entry.status === 'being_helped',
+      };
+    });
   },
 });
 

@@ -8,12 +8,15 @@ import {
   getCurrentSemester,
   getCurrentUser,
   getGlobalSettings,
+  getMachineFronts,
+  getMachinePosition,
   getQueueEntry,
   getQueueLength,
   getStudent,
   getTA,
   getWaittimeData,
   getWaittimePingData,
+  notifyFrontOfLine,
 } from '../common';
 import { Doc, Id } from '../_generated/dataModel';
 import { getAuthUserId } from '@convex-dev/auth/server';
@@ -60,6 +63,32 @@ export const unfreezeQueue = mutation({
     await ctx.db.patch(globalSettings._id, {
       is_frozen: false,
     });
+  },
+});
+
+export const setSelfServeMode = mutation({
+  args: { courseId: v.id('courses'), enabled: v.boolean() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ensureAuthAndTA(ctx, args.courseId);
+
+    const globalSettings = await getGlobalSettings(ctx, args.courseId);
+
+    if ((globalSettings.self_serve_mode ?? false) === args.enabled) {
+      return;
+    }
+
+    await ctx.db.patch(globalSettings._id, {
+      self_serve_mode: args.enabled,
+    });
+
+    // Teams already at the front won't see a removal ahead of them, so tell them now.
+    if (args.enabled) {
+      const fronts = await getMachineFronts(ctx, globalSettings.curr_sem);
+      for (const front of fronts.values()) {
+        await notifyFrontOfLine(ctx, front);
+      }
+    }
   },
 });
 
@@ -163,6 +192,7 @@ export const addQuestion = mutation({
       throw new ConvexError('User not authenticated for this event');
     }
     const curr_sem = await getCurrentSemester(ctx, args.courseId);
+    let new_entry_id: Id<'ohq'>;
 
     if (!Number.isSafeInteger(args.team_number) || args.team_number < 1) {
       throw new ConvexError('Team number must be a whole number of 1 or more');
@@ -275,7 +305,7 @@ export const addQuestion = mutation({
       const assignment_name = (await getAssignmentInCourse(ctx, args.courseId, args.assignment_id))
         .name;
 
-      await ctx.db.insert('ohq', {
+      new_entry_id = await ctx.db.insert('ohq', {
         semester_id: curr_sem._id,
         student_id: student._id,
         student_name: prefs.preferred_name,
@@ -387,7 +417,7 @@ export const addQuestion = mutation({
       const assignment_name = (await getAssignmentInCourse(ctx, args.courseId, args.assignment_id))
         .name;
 
-      await ctx.db.insert('ohq', {
+      new_entry_id = await ctx.db.insert('ohq', {
         semester_id: curr_sem._id,
         student_id: student._id,
         student_name: prefs.preferred_name,
@@ -413,6 +443,13 @@ export const addQuestion = mutation({
         prefs.preferred_name,
         assignment_name,
       );
+    }
+
+    // Self-serve: a team joining an empty line for its machine is already at the front.
+    const new_entry = (await ctx.db.get(new_entry_id))!;
+    const { self_serve_mode } = await getGlobalSettings(ctx, args.courseId);
+    if (self_serve_mode && (await getMachinePosition(ctx, new_entry)) === 1) {
+      await notifyFrontOfLine(ctx, new_entry);
     }
 
     return {
@@ -539,8 +576,8 @@ export const removeStudent = mutation({
       num_asked_to_fix: existing_entry.num_asked_to_fix,
     });
 
-    if (args.reason === 'removed') {
-      // notify the student
+    if (args.reason === 'removed' && user_data.kind === 'TA') {
+      // notify the student (not when they removed themselves)
       await ctx.runMutation(internal.common.internalSendNotification, {
         semester_user: student_to_remove.semester_user_id,
         title: "You've been removed from the queue",
