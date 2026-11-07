@@ -26,10 +26,14 @@ export default function YourEntry(props) {
   // Place in line for this team's machine. Teams ahead count until they leave
   // the queue, even after they've been called.
   const position = userData?.machine_position ?? 0;
-  // Show the line length, not a time estimate: wait times depend on how long
-  // the prints ahead take, which the queue doesn't know.
   const teamsAhead = Math.max(position - 1, 0);
 
+  const estimatedMins =
+    !queueData || queueData.num_tas === 0
+      ? 0
+      : Math.floor((queueData.mins_per_student / queueData.num_tas) * teamsAhead);
+
+  // Self-serve has no officer call times to estimate from, so show the line length instead.
   const selfServe = queueData?.self_serve_mode ?? false;
   const isNextUp = selfServe && position === 1 && studentData?.status === 'waiting';
 
@@ -56,7 +60,9 @@ export default function YourEntry(props) {
                 lineHeight: 1.3,
               })}
             >
-              {`${teamsAhead} team${teamsAhead === 1 ? '' : 's'} ahead of you`}
+              {selfServe
+                ? `${teamsAhead} team${teamsAhead === 1 ? '' : 's'} ahead of you`
+                : `~${estimatedMins} minute${estimatedMins === 1 ? '' : 's'} wait`}
             </Typography>
             <Typography sx={[t.bodyMuted, { mt: 0.25 }]}>
               in line for {studentData?.assignment_name || 'your machine'}
