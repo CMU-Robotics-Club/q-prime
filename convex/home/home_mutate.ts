@@ -168,12 +168,10 @@ export const addQuestion = mutation({
       throw new ConvexError('Team number must be a whole number of 1 or more');
     }
     if (args.question.trim().length === 0) {
-      throw new ConvexError('Add a link to or description of your part');
+      throw new ConvexError('Add a description of your part');
     }
     if (args.question.length > MAX_PART_LENGTH) {
-      throw new ConvexError(
-        `Part link or description must be at most ${MAX_PART_LENGTH} characters`,
-      );
+      throw new ConvexError(`Part description must be at most ${MAX_PART_LENGTH} characters`);
     }
 
     // Handle TA created questions

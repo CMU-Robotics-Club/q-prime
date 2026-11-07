@@ -254,8 +254,7 @@ export default function AskQuestion() {
               multiline
               minRows={2}
               variant="outlined"
-              label="Part (link or description)"
-              placeholder="Onshape/Drive link to your STL/DXF, or describe the part (material, size, qty)"
+              label="Part description"
               value={question ?? ''}
               onChange={(event) => setQuestion(event.target.value)}
               inputProps={{ maxLength: MAX_PART_LENGTH }}
