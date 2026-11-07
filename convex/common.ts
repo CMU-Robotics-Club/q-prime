@@ -43,11 +43,12 @@ export async function getCurrentSemester(ctx: QueryCtx, courseId: Id<'courses'>)
 }
 
 /**
- * Team number of every archived print request in the course's current semester.
- * Used to add the team column to the CSV export; the caller must already have
- * checked access (http.ts runs metrics.internalGetQuestionsCsvDump first).
+ * Team number and phone number of every archived print request in the course's
+ * current semester. Used to add those columns to the CSV export; the caller
+ * must already have checked admin access (http.ts runs
+ * metrics.internalGetQuestionsCsvDump first).
  */
-export const internalGetQuestionTeamNumbers = internalQuery({
+export const internalGetQuestionTeamInfo = internalQuery({
   args: { courseId: v.id('courses') },
   handler: async (ctx, args) => {
     const curr_sem = await getCurrentSemester(ctx, args.courseId);
@@ -55,7 +56,11 @@ export const internalGetQuestionTeamNumbers = internalQuery({
       .query('questions')
       .withIndex('by_semester_and_entry_time_ms', (q) => q.eq('semester_id', curr_sem._id))
       .collect();
-    return questions.map((q) => ({ question_id: q._id, team_number: q.team_number }));
+    return questions.map((q) => ({
+      question_id: q._id,
+      team_number: q.team_number,
+      phone_number: q.phone_number,
+    }));
   },
 });
 

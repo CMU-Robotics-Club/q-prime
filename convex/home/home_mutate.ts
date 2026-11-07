@@ -160,6 +160,24 @@ export const deleteAnnouncement = mutation({
 
 // Keep in sync with the Part field's maxLength in AskQuestion.tsx.
 const MAX_PART_LENGTH = 1000;
+// Keep in sync with MAX_PHONE_LENGTH and isValidPhoneNumber in AskQuestion.tsx.
+const MAX_PHONE_LENGTH = 32;
+
+// Phone numbers are stored as typed (trimmed), so members can use dashes,
+// spaces, dots, parentheses or a leading +, but must have 10 to 15 digits.
+function validatePhoneNumber(phone: string) {
+  const trimmed = phone.trim();
+  const num_digits = trimmed.replace(/\D/g, '').length;
+  if (
+    trimmed.length > MAX_PHONE_LENGTH ||
+    !/^\+?[\d\s().-]+$/.test(trimmed) ||
+    num_digits < 10 ||
+    num_digits > 15
+  ) {
+    throw new ConvexError('Enter a phone number with area code (10 to 15 digits)');
+  }
+  return trimmed;
+}
 
 // Label for a queue entry in notifications. Entries created before team
 // numbers existed fall back to the member's name.
@@ -174,6 +192,8 @@ export const addQuestion = mutation({
     location: v.string(),
     assignment_id: v.id('assignments'),
     team_number: v.number(),
+    // Optional so pages loaded before this field existed can still submit.
+    phone_number: v.optional(v.string()),
     override_cooldown: v.boolean(),
     email: v.optional(v.string()), // only used for TA created questions
   },
@@ -197,6 +217,8 @@ export const addQuestion = mutation({
     if (!Number.isSafeInteger(args.team_number) || args.team_number < 1) {
       throw new ConvexError('Team number must be a whole number of 1 or more');
     }
+    const phone_number =
+      args.phone_number === undefined ? undefined : validatePhoneNumber(args.phone_number);
     if (args.question.trim().length === 0) {
       throw new ConvexError('Add a description of your part');
     }
@@ -317,6 +339,7 @@ export const addQuestion = mutation({
         question: args.question,
         location: args.location,
         team_number: args.team_number,
+        phone_number,
         entry_time_ms: Date.now(),
         messages_from_tas: [],
         position: queue_length,
@@ -429,6 +452,7 @@ export const addQuestion = mutation({
         question: args.question,
         location: args.location,
         team_number: args.team_number,
+        phone_number,
         entry_time_ms: Date.now(),
         messages_from_tas: [],
         position: queue_length,
@@ -565,6 +589,7 @@ export const removeStudent = mutation({
       question: existing_entry.question,
       location: existing_entry.location,
       team_number: existing_entry.team_number,
+      phone_number: existing_entry.phone_number,
 
       created_by: existing_entry.created_by,
       finished_by: args.reason,

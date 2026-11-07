@@ -150,6 +150,7 @@ export default defineSchema({
     question: v.string(),
     location: v.string(),
     team_number: v.optional(v.number()), // unset on rows archived before team numbers existed
+    phone_number: v.optional(v.string()), // officer-only; unset on rows archived before phone numbers existed
 
     created_by: v.union(v.literal('student'), v.literal('TA')),
     finished_by: v.union(v.literal('helped'), v.literal('removed')),
@@ -196,6 +197,9 @@ export default defineSchema({
     question: v.string(),
     location: v.string(),
     team_number: v.optional(v.number()), // unset on entries created before team numbers existed
+    // Officer-only: never include in getPublicQueue. Unset on entries created
+    // before phone numbers existed, or submitted from a page loaded before then.
+    phone_number: v.optional(v.string()),
 
     entry_time_ms: v.number(),
 

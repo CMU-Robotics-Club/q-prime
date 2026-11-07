@@ -23,6 +23,8 @@ import { t } from '../../../themes/styles';
 
 // Keep in sync with MAX_PART_LENGTH in convex/home/home_mutate.ts.
 const MAX_PART_LENGTH = 1000;
+// Keep in sync with MAX_PHONE_LENGTH in convex/home/home_mutate.ts.
+const MAX_PHONE_LENGTH = 32;
 // Used when no locations are configured for today.
 const DEFAULT_LOCATIONS = ['RoboClub'];
 
@@ -31,6 +33,15 @@ const DEFAULT_LOCATIONS = ['RoboClub'];
 function parseTeamNumber(value: string): number | null {
   const n = Number(value);
   return /^\d+$/.test(value) && Number.isSafeInteger(n) && n >= 1 ? n : null;
+}
+
+// Same check as validatePhoneNumber in convex/home/home_mutate.ts: 10 to 15
+// digits, optionally written with spaces, dashes, dots, parentheses or a
+// leading +.
+function isValidPhoneNumber(value: string): boolean {
+  const trimmed = value.trim();
+  const numDigits = trimmed.replace(/\D/g, '').length;
+  return /^\+?[\d\s().-]+$/.test(trimmed) && numDigits >= 10 && numDigits <= 15;
 }
 
 export default function AskQuestion() {
@@ -43,6 +54,8 @@ export default function AskQuestion() {
 
   const [teamNumber, setTeamNumber] = useState('');
   const [teamNumberError, setTeamNumberError] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumberError, setPhoneNumberError] = useState(false);
   const [email, setEmail] = useState('');
   const [location, setLocation] = useState('');
   const [assignmentId, setAssignmentId] = useState<Id<'assignments'> | null>(null);
@@ -83,8 +96,10 @@ export default function AskQuestion() {
   function handleSubmit(event) {
     event.preventDefault();
     const team_number = parseTeamNumber(teamNumber);
-    if (team_number === null) {
-      setTeamNumberError(true);
+    const phoneValid = isValidPhoneNumber(phoneNumber);
+    setTeamNumberError(team_number === null);
+    setPhoneNumberError(!phoneValid);
+    if (team_number === null || !phoneValid) {
       return;
     }
     setAskDisabled(true);
@@ -101,6 +116,7 @@ export default function AskQuestion() {
         location,
         assignment_id: assignmentId!,
         team_number,
+        phone_number: phoneNumber.trim(),
         override_cooldown: false,
         email: email.trim(),
       });
@@ -125,6 +141,8 @@ export default function AskQuestion() {
   function clearValues() {
     setTeamNumber('');
     setTeamNumberError(false);
+    setPhoneNumber('');
+    setPhoneNumberError(false);
     if (isTA) {
       setEmail('');
     }
@@ -163,6 +181,24 @@ export default function AskQuestion() {
       error={teamNumberError}
       helperText={teamNumberError ? 'Team number must be 1 or more' : undefined}
       inputProps={{ inputMode: 'numeric', maxLength: 6 }}
+    />
+  );
+
+  const phoneNumberField = (
+    <TextField
+      required
+      fullWidth
+      variant="outlined"
+      type="tel"
+      label="Phone number"
+      value={phoneNumber}
+      onChange={(event) => {
+        setPhoneNumber(event.target.value);
+        setPhoneNumberError(false);
+      }}
+      error={phoneNumberError}
+      helperText={phoneNumberError ? 'Enter a phone number with area code' : undefined}
+      inputProps={{ inputMode: 'tel', autoComplete: 'tel', maxLength: MAX_PHONE_LENGTH }}
     />
   );
 
@@ -221,33 +257,26 @@ export default function AskQuestion() {
 
         <CardContent sx={{ p: '0px 12px' }}>
           <Box component="form" onSubmit={handleSubmit}>
-            {isTA ? (
-              <>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
-                  {teamNumberField}
-                  <TextField
-                    required
-                    fullWidth
-                    variant="outlined"
-                    type="email"
-                    label="Email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    inputProps={{ maxLength: 256 }}
-                  />
-                </Stack>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                  {locationField}
-                  {machineField}
-                </Stack>
-              </>
-            ) : (
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                {teamNumberField}
-                {locationField}
-                {machineField}
-              </Stack>
-            )}
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
+              {teamNumberField}
+              {isTA && (
+                <TextField
+                  required
+                  fullWidth
+                  variant="outlined"
+                  type="email"
+                  label="Email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  inputProps={{ maxLength: 256 }}
+                />
+              )}
+              {phoneNumberField}
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              {locationField}
+              {machineField}
+            </Stack>
             <TextField
               required
               fullWidth
@@ -279,6 +308,7 @@ export default function AskQuestion() {
         timePassed={timePassed}
         email={email.trim()}
         teamNumber={parseTeamNumber(teamNumber)}
+        phoneNumber={phoneNumber.trim()}
         question={question}
         location={location}
         assignmentId={assignmentId}

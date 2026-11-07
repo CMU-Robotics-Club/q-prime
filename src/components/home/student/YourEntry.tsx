@@ -109,6 +109,14 @@ export default function YourEntry(props) {
               </Typography>
             </Box>
           )}
+          {studentData?.phone_number !== undefined && (
+            <Box>
+              <Box sx={t.monoLabel}>[phone]</Box>
+              <Typography sx={{ fontSize: 14, color: 'ink.primary' }}>
+                {studentData.phone_number}
+              </Typography>
+            </Box>
+          )}
           <Box>
             <Box sx={t.monoLabel}>[location]</Box>
             <Typography sx={{ fontSize: 14, color: 'ink.primary' }}>

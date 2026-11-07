@@ -8,7 +8,17 @@ import DialogShell from '../../common/dialogs/DialogShell';
 import { t } from '../../../themes/styles';
 
 export default function CooldownViolationOverlay(props) {
-  const { open, setOpen, email, teamNumber, question, location, assignmentId, timePassed } = props;
+  const {
+    open,
+    setOpen,
+    email,
+    teamNumber,
+    phoneNumber,
+    question,
+    location,
+    assignmentId,
+    timePassed,
+  } = props;
   const courseId = useCourseId();
 
   const queueData = useQuery(api.home.home_get.getQueueData, { courseId });
@@ -23,6 +33,7 @@ export default function CooldownViolationOverlay(props) {
         location,
         assignment_id: assignmentId,
         team_number: teamNumber,
+        phone_number: phoneNumber,
         override_cooldown: true,
         email,
       }).finally(() => {

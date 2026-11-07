@@ -69,6 +69,9 @@ export default function StudentEntry(props) {
           <Typography sx={t.studentName}>{student.student_name}</Typography>
         )}
         <Typography sx={t.studentEmail}>{student.student_email}</Typography>
+        {student.phone_number !== undefined && (
+          <Typography sx={t.studentEmail}>{student.phone_number}</Typography>
+        )}
         <Typography sx={[t.monoLabel, { mt: '2px' }]}>[{student.location}]</Typography>
       </Box>
 
