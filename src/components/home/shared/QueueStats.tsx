@@ -14,10 +14,12 @@ export default function QueueStats() {
   const queueData = useQuery(api.home.home_get.getQueueData, { courseId });
   const isFrozen = queueData?.is_frozen ?? true;
   const numStudents = queueData?.num_students || 0;
+  // Every waiting team gets called before a team joining now. Hidden until
+  // enough teams have been called to tell how often that happens.
   const eta =
-    queueData && queueData.num_tas !== 0
-      ? Math.floor((queueData.num_unhelped * queueData.mins_per_student) / queueData.num_tas)
-      : 0;
+    queueData && queueData.mins_per_call !== null
+      ? Math.round(queueData.num_unhelped * queueData.mins_per_call)
+      : null;
 
   return (
     <Box
@@ -61,7 +63,7 @@ export default function QueueStats() {
               </Box>{' '}
               on the queue.
             </Typography>
-            {queueData && (
+            {eta !== null && (
               <Typography sx={[t.bodySmall, { mt: 0.5 }]}>
                 Estimated wait time is{' '}
                 <Box component="strong" sx={{ fontWeight: 700, color: 'ink.primary' }}>

@@ -28,13 +28,28 @@ export default function YourEntry(props) {
   const position = userData?.machine_position ?? 0;
   const teamsAhead = Math.max(position - 1, 0);
 
+  // Teams that still have to be called before this one, times how often this
+  // machine has been calling teams. No estimate until it has called a few.
+  const waitingAhead = userData?.waiting_ahead ?? teamsAhead;
+  const minsPerCall = queueData?.mins_per_call_by_machine?.find(
+    (m) => m.assignment_id === studentData?.assignment_id,
+  )?.mins_per_call;
   const estimatedMins =
-    !queueData || queueData.num_tas === 0
-      ? 0
-      : Math.floor((queueData.mins_per_student / queueData.num_tas) * teamsAhead);
+    minsPerCall === undefined ? null : Math.max(1, Math.round(waitingAhead * minsPerCall));
 
   // Self-serve has no officer call times to estimate from, so show the line length instead.
   const selfServe = queueData?.self_serve_mode ?? false;
+  const teamsAheadText = `${teamsAhead} team${teamsAhead === 1 ? '' : 's'} ahead of you`;
+  let lineText = teamsAheadText;
+  if (!selfServe) {
+    if (studentData?.status === 'being_helped') {
+      lineText = "You've been called";
+    } else if (waitingAhead === 0) {
+      lineText = "You're next to be called";
+    } else if (estimatedMins !== null) {
+      lineText = `~${estimatedMins} minute${estimatedMins === 1 ? '' : 's'} wait`;
+    }
+  }
   const isNextUp = selfServe && position === 1 && studentData?.status === 'waiting';
 
   const isPaused =
@@ -60,9 +75,7 @@ export default function YourEntry(props) {
                 lineHeight: 1.3,
               })}
             >
-              {selfServe
-                ? `${teamsAhead} team${teamsAhead === 1 ? '' : 's'} ahead of you`
-                : `~${estimatedMins} minute${estimatedMins === 1 ? '' : 's'} wait`}
+              {lineText}
             </Typography>
             <Typography sx={[t.bodyMuted, { mt: 0.25 }]}>
               in line for {studentData?.assignment_name || 'your machine'}

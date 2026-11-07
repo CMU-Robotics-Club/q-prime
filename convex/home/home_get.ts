@@ -7,6 +7,7 @@ import {
   getCurrentUser,
   getGlobalSettings,
   getMachinePosition,
+  getMachineWaitingAhead,
   getQueueEntry,
   getQueueLength,
   getWaittimeData,
@@ -53,6 +54,9 @@ export const getQueueData = query({
       questions_policy_url: globalSettings.questions_policy_url,
 
       num_unhelped: wait_time_data.num_unhelped,
+      mins_per_call: wait_time_data.mins_per_call,
+      mins_per_call_by_machine: wait_time_data.mins_per_call_by_machine,
+      // Old estimate inputs, kept for pages loaded before the switch to call times.
       num_tas: wait_time_data.num_tas,
       mins_per_student: wait_time_data.mins_per_student,
     };
@@ -85,6 +89,7 @@ export const getUserData = query({
 
     let student_data: Doc<'ohq'> | null = null;
     let machine_position: number | null = null;
+    let waiting_ahead: number | null = null;
     let ta_data: TAData = null;
 
     if (user_data.kind === 'TA') {
@@ -107,6 +112,7 @@ export const getUserData = query({
       student_data = await getQueueEntry(ctx, args.courseId, student._id);
       if (student_data) {
         machine_position = await getMachinePosition(ctx, student_data);
+        waiting_ahead = await getMachineWaitingAhead(ctx, student_data);
       }
     }
 
@@ -144,6 +150,7 @@ export const getUserData = query({
       ta_data: ta_data as typeof ta_data | null,
       student_data: student_data as typeof student_data | null,
       machine_position: machine_position,
+      waiting_ahead: waiting_ahead,
       notification: notification,
       valid_email: valid_email,
     };

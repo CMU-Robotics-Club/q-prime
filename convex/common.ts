@@ -102,6 +102,16 @@ export async function getQueueLength(ctx: QueryCtx, courseId: Id<'courses'>) {
   return queue.length;
 }
 
+// Minutes between calls, from the call times in the lookback window. Measured
+// from the first call to now, so teams waiting with nobody being called pushes
+// it up. Null with fewer than 2 calls, which is too few to estimate from.
+function minsPerCall(call_times_ms: number[], now_ms: number): number | null {
+  if (call_times_ms.length < 2) {
+    return null;
+  }
+  return (now_ms - Math.min(...call_times_ms)) / 60000 / call_times_ms.length;
+}
+
 export async function getWaittimeData(
   ctx: QueryCtx,
   courseId: Id<'courses'>,
@@ -112,6 +122,18 @@ export async function getWaittimeData(
 
   let total_helped_ms = 0;
   const active_tas = new Set<Id<'tas'>>();
+
+  // When each team in the window was called, by machine. Wait estimates use
+  // how often teams get called, not how long officers take to mark them done.
+  const call_times_by_machine = new Map<Id<'assignments'>, number[]>();
+  const addCall = (assignment_id: Id<'assignments'>, call_time_ms: number) => {
+    if (call_time_ms >= start_time.getTime()) {
+      call_times_by_machine.set(assignment_id, [
+        ...(call_times_by_machine.get(assignment_id) ?? []),
+        call_time_ms,
+      ]);
+    }
+  };
 
   const curr_sem = await getCurrentSemester(ctx, courseId);
 
@@ -135,6 +157,8 @@ export async function getWaittimeData(
     if (!active_tas.has(question.ta_id)) {
       active_tas.add(question.ta_id);
     }
+
+    addCall(question.assignment_id, question.exit_time_ms - question.help_duration_ms);
   }
 
   // handle current questions
@@ -164,6 +188,8 @@ export async function getWaittimeData(
     if (!active_tas.has(curr_helping.helping_ta.ta_id)) {
       active_tas.add(curr_helping.helping_ta.ta_id);
     }
+
+    addCall(curr_helping.assignment_id, curr_helping.help_start_time_ms);
   }
 
   // combine
@@ -179,25 +205,26 @@ export async function getWaittimeData(
 
   const num_unhelped = unhelped_questions.length;
 
-  // avoid dividing by zero
-  if (total_questions !== 0) {
-    const mins_per_student = total_helped_ms / 60000 / total_questions;
-    const wait_time = (num_unhelped * mins_per_student) / num_tas;
+  const mins_per_call = minsPerCall([...call_times_by_machine.values()].flat(), now.getTime());
+  const mins_per_call_by_machine = [...call_times_by_machine].flatMap(([assignment_id, times]) => {
+    const machine_mins_per_call = minsPerCall(times, now.getTime());
+    return machine_mins_per_call === null
+      ? []
+      : [{ assignment_id, mins_per_call: machine_mins_per_call }];
+  });
 
-    return {
-      mins_per_student: mins_per_student,
-      wait_time: wait_time,
-      num_unhelped: num_unhelped,
-      num_tas: num_tas,
-    };
-  } else {
-    return {
-      mins_per_student: 0,
-      wait_time: 0,
-      num_unhelped: num_unhelped,
-      num_tas: num_tas,
-    };
-  }
+  return {
+    // Every waiting team gets called before a team joining now.
+    wait_time: mins_per_call === null ? 0 : num_unhelped * mins_per_call,
+    mins_per_call: mins_per_call,
+    mins_per_call_by_machine: mins_per_call_by_machine,
+    num_unhelped: num_unhelped,
+
+    // Old estimate (call-to-done time per officer). Only pages loaded before
+    // the switch to call times still read these.
+    mins_per_student: total_questions !== 0 ? total_helped_ms / 60000 / total_questions : 0,
+    num_tas: num_tas,
+  };
 }
 
 /**
@@ -231,7 +258,20 @@ export async function getQueueEntry(
  * an entry ahead of it leaves the queue.
  */
 export async function getMachinePosition(ctx: QueryCtx, entry: Doc<'ohq'>) {
-  const ahead = await ctx.db
+  return (await getMachineEntriesAhead(ctx, entry)).length + 1;
+}
+
+/**
+ * Entries ahead on the same machine that haven't been called yet, i.e. the
+ * ones that still have to be called before this one.
+ */
+export async function getMachineWaitingAhead(ctx: QueryCtx, entry: Doc<'ohq'>) {
+  return (await getMachineEntriesAhead(ctx, entry)).filter((e) => e.status !== 'being_helped')
+    .length;
+}
+
+async function getMachineEntriesAhead(ctx: QueryCtx, entry: Doc<'ohq'>) {
+  return await ctx.db
     .query('ohq')
     .withIndex('by_sem_and_assignment_and_position', (q) =>
       q
@@ -240,7 +280,6 @@ export async function getMachinePosition(ctx: QueryCtx, entry: Doc<'ohq'>) {
         .lt('position', entry.position),
     )
     .collect();
-  return ahead.length + 1;
 }
 
 /**
