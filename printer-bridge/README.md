@@ -21,8 +21,10 @@ when the bridge hasn't heard from it for 3 minutes.
 
 ## Adding a printer
 
-In **Settings > Printer Settings**, add the printer's name, type, and host name
-or IP address. For a Bambu printer, also enter the 8-character LAN access code from
+In **Settings > Printer Settings**, add the printer's name, type, host name
+or IP address, and the queue line (machine) it serves. Wait estimates for that
+line use the printer: when it will be free, and how long its jobs usually take
+(the bridge reports each job's length). For a Bambu printer, also enter the 8-character LAN access code from
 the printer's network settings on its screen (next to the LAN Only option; just
 read it, don't turn LAN Only on). The code changes after a factory reset.
 Admins can see access codes in Settings and in the CSV download. **Download CSV**

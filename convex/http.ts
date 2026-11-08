@@ -525,7 +525,14 @@ http.route({
   }),
 });
 
-const PRINTER_CSV_COLUMNS = ['name', 'type', 'host', 'access_code', 'serial'] as const;
+const PRINTER_CSV_COLUMNS = [
+  'name',
+  'type',
+  'host',
+  'access_code',
+  'serial',
+  'queue_line',
+] as const;
 
 function csvCell(value: unknown) {
   const s = value == null ? '' : String(value);
@@ -557,10 +564,17 @@ http.route({
 
     const rows =
       printers.length > 0
-        ? printers.map((p) => [p.name, p.type, p.host, p.access_code ?? '', p.serial ?? ''])
+        ? printers.map((p) => [
+            p.name,
+            p.type,
+            p.host,
+            p.access_code ?? '',
+            p.serial ?? '',
+            p.assignment_name ?? '',
+          ])
         : [
-            ['Mei', 'bambu', 'rc-bambu-mei.wifi.local.cmu.edu', '', ''],
-            ['Canis', 'elegoo', 'rc-centauri-canis.wifi.local.cmu.edu', '', ''],
+            ['Mei', 'bambu', 'rc-bambu-mei.wifi.local.cmu.edu', '', '', '3D Printer'],
+            ['Canis', 'elegoo', 'rc-centauri-canis.wifi.local.cmu.edu', '', '', '3D Printer'],
           ];
     const csvContent = [PRINTER_CSV_COLUMNS, ...rows]
       .map((row) => row.map(csvCell).join(','))
@@ -608,6 +622,7 @@ http.route({
         host: cells.get('host') ?? cells.get('url') ?? '',
         access_code: optional('access_code'),
         serial: optional('serial'),
+        queue_line: optional('queue_line') ?? optional('line') ?? optional('machine'),
       };
     });
 

@@ -10,6 +10,7 @@ import { useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { useCourseId } from '../../../contexts/CourseContext';
 import { t, s } from '../../../themes/styles';
+import { estimatePrinterWaitMs, formatDuration, useNow } from '../shared/printerState';
 
 export default function YourEntry(props) {
   const { openRemoveOverlay } = props;
@@ -17,7 +18,9 @@ export default function YourEntry(props) {
 
   const queueData = useQuery(api.home.home_get.getQueueData, { courseId });
   const userData = useQuery(api.home.home_get.getUserData, { courseId });
+  const printers = useQuery(api.printers.getPrinterStatus, { courseId });
   const studentData = userData?.student_data;
+  const now = useNow();
 
   const cooldownMsg = queueData?.allow_cooldown_override
     ? 'Frozen in line — you will not advance until an officer approves your request.'
@@ -37,14 +40,26 @@ export default function YourEntry(props) {
   const estimatedMins =
     minsPerCall === undefined ? null : Math.max(1, Math.round(waitingAhead * minsPerCall));
 
+  // On a line with printers, estimate from when they'll actually be free: every
+  // team ahead (called or not) still needs one.
+  const printerWaitMs =
+    printers && studentData
+      ? estimatePrinterWaitMs(printers, studentData.assignment_id, teamsAhead, now)
+      : null;
+
   // Self-serve has no officer call times to estimate from, so show the line length instead.
   const selfServe = queueData?.self_serve_mode ?? false;
   const teamsAheadText = `${teamsAhead} team${teamsAhead === 1 ? '' : 's'} ahead of you`;
   let lineText = teamsAheadText;
-  if (!selfServe) {
-    if (studentData?.status === 'being_helped') {
-      lineText = "You've been called";
-    } else if (waitingAhead === 0) {
+  if (studentData?.status === 'being_helped' && !selfServe) {
+    lineText = "You've been called";
+  } else if (printerWaitMs !== null) {
+    lineText =
+      printerWaitMs < 60 * 1000
+        ? 'A printer is free for you'
+        : `~${formatDuration(printerWaitMs)} until a printer is free`;
+  } else if (!selfServe) {
+    if (waitingAhead === 0) {
       lineText = "You're next to be called";
     } else if (estimatedMins !== null) {
       lineText = `~${estimatedMins} minute${estimatedMins === 1 ? '' : 's'} wait`;

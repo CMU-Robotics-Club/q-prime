@@ -178,6 +178,9 @@ export default defineSchema({
     name: v.string(),
     type: v.union(v.literal('bambu'), v.literal('elegoo')),
     host: v.string(), // host name or IP address
+    // the queue line (machine) this printer serves; wait estimates for that
+    // line use it. Unset: not used for estimates.
+    assignment_id: v.optional(v.id('assignments')),
     serial: v.optional(v.string()), // Bambu; the bridge reads it from the printer when unset
     access_code: v.optional(v.string()), // Bambu LAN access code; admins only
 
@@ -194,6 +197,8 @@ export default defineSchema({
       ),
     ),
     remaining_sec: v.optional(v.number()), // printer's own estimate, as of status_updated_at
+    job_sec: v.optional(v.number()), // total length of the current job, while one runs
+    recent_job_secs: v.optional(v.array(v.number())), // lengths of its last few jobs
     status_updated_at: v.optional(v.number()),
 
     // Set when an officer sends a team to this printer; cleared when the

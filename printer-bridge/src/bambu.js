@@ -42,12 +42,26 @@ export function normalizeBambu(report) {
   }
   const cancelled =
     report.gcode_state === 'FAILED' && CANCELLED_ERRORS.includes(report.print_error);
+  const state = cancelled ? 'idle' : (STATES[report.gcode_state] ?? 'idle');
   const minutes = report.mc_remaining_time;
-  return {
-    state: cancelled ? 'idle' : (STATES[report.gcode_state] ?? 'idle'),
-    remaining_sec:
-      typeof minutes === 'number' && Number.isFinite(minutes) ? minutes * 60 : undefined,
-  };
+  const remaining =
+    typeof minutes === 'number' && Number.isFinite(minutes) ? minutes * 60 : undefined;
+  // The whole job's length, for the site's typical print length: time left
+  // over the fraction still to go (at 0% the time left is the whole job).
+  const percent = report.mc_percent;
+  const hasJob = state === 'printing' || state === 'paused' || state === 'preparing';
+  let job_sec;
+  if (hasJob && remaining !== undefined && remaining > 0) {
+    const toGo =
+      typeof percent === 'number' && percent > 0 && percent < 100 ? 1 - percent / 100 : 1;
+    job_sec = roundTo5Min(remaining / toGo);
+  }
+  return { state, remaining_sec: remaining, job_sec };
+}
+
+// Job lengths only need to be rough, and every change is a post to the site.
+export function roundTo5Min(sec) {
+  return Math.max(300, Math.round(sec / 300) * 300);
 }
 
 /**

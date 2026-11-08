@@ -30,6 +30,11 @@ const STALE_AFTER_MS = 3 * 60 * 1000;
 export default function PrinterSettings() {
   const courseId = useCourseId();
   const printers = useQuery(api.printers.getPrinterSettings, { courseId }) ?? [];
+  // Queue lines a printer can serve: the semester's machines, minus the legacy "Other".
+  const machineData = useQuery(api.home.home_get.getAllAssignments, { courseId });
+  const machines = (machineData?.all_assignments ?? []).filter(
+    (m) => m._id !== machineData?.other_assignment_id,
+  );
 
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
@@ -44,6 +49,7 @@ export default function PrinterSettings() {
   const [host, setHost] = useState('');
   const [accessCode, setAccessCode] = useState('');
   const [serial, setSerial] = useState('');
+  const [queueLine, setQueueLine] = useState('');
 
   const selected = printers.find((p) => p._id === selectedId);
 
@@ -53,6 +59,7 @@ export default function PrinterSettings() {
     setHost('');
     setAccessCode('');
     setSerial('');
+    setQueueLine(machines.length === 1 ? machines[0]._id : '');
     setOpenAdd(true);
   };
 
@@ -63,6 +70,7 @@ export default function PrinterSettings() {
     setHost(printer.host);
     setAccessCode(printer.access_code ?? '');
     setSerial(printer.serial ?? '');
+    setQueueLine(printer.assignment_id ?? '');
     setOpenEdit(true);
   };
 
@@ -128,6 +136,7 @@ export default function PrinterSettings() {
     host,
     serial: type === 'bambu' ? serial : undefined,
     access_code: type === 'bambu' && accessCode !== '' ? accessCode : undefined,
+    assignment_id: queueLine === '' ? null : (queueLine as Id<'assignments'>),
   });
 
   const createPrinterMutation = useMutation(api.printers.createPrinter);
@@ -159,6 +168,9 @@ export default function PrinterSettings() {
       setAccessCode={setAccessCode}
       serial={serial}
       setSerial={setSerial}
+      queueLine={queueLine}
+      setQueueLine={setQueueLine}
+      machines={machines}
     />
   );
 
@@ -183,6 +195,7 @@ export default function PrinterSettings() {
                 <Typography sx={{ fontWeight: 'bold' }}>{printer.name}</Typography>
                 <Typography sx={{ fontSize: 13, color: 'ink.secondary' }}>
                   {TYPE_LABELS[printer.type]}
+                  {printer.assignment_name ? ` · ${printer.assignment_name}` : ' · no queue line'}
                 </Typography>
               </TableCell>
               <TableCell align="left" sx={{ wordBreak: 'break-word' }}>

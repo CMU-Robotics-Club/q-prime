@@ -9,6 +9,7 @@
 
 import { randomUUID } from 'node:crypto';
 import WebSocket from 'ws';
+import { roundTo5Min } from './bambu.js';
 
 // The printer closes a connection that sends nothing for about a minute; its
 // own status pushes don't count. A status request every 20s keeps it open.
@@ -61,7 +62,12 @@ export function normalizeElegoo(status) {
   }
 
   const active = state === 'printing' || state === 'paused' || state === 'preparing';
-  return { state, remaining_sec: active ? remaining : undefined };
+  // TotalTicks is the slicer's estimate of the whole job, in seconds.
+  const job_sec =
+    active && typeof info.TotalTicks === 'number' && info.TotalTicks > 0
+      ? roundTo5Min(info.TotalTicks)
+      : undefined;
+  return { state, remaining_sec: active ? remaining : undefined, job_sec };
 }
 
 /**

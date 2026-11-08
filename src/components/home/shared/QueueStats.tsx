@@ -6,12 +6,16 @@ import { useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { useCourseId } from '../../../contexts/CourseContext';
 import { t } from '../../../themes/styles';
+import { estimatePrinterWaitMs, formatDuration, useNow } from './printerState';
 
 export default function QueueStats() {
   const theme = useTheme();
   const courseId = useCourseId();
 
   const queueData = useQuery(api.home.home_get.getQueueData, { courseId });
+  const printers = useQuery(api.printers.getPrinterStatus, { courseId });
+  const lineEntries = useQuery(api.home.home_get.getPublicQueue, { courseId });
+  const now = useNow();
   const isFrozen = queueData?.is_frozen ?? true;
   const numStudents = queueData?.num_students || 0;
   // Every waiting team gets called before a team joining now. Hidden until
@@ -20,6 +24,28 @@ export default function QueueStats() {
     queueData && queueData.mins_per_call !== null
       ? Math.round(queueData.num_unhelped * queueData.mins_per_call)
       : null;
+
+  // Wait for a team joining now, per queue line: on a line with printers, from
+  // when they'll be free (everyone in line needs one first); otherwise from how
+  // often the line calls teams. Lines with neither are left out.
+  const lineEstimates = (queueData?.current_assignments ?? []).flatMap((machine) => {
+    const entries = (lineEntries ?? []).filter((e) => e.assignment_id === machine._id);
+    let waitMs = printers
+      ? estimatePrinterWaitMs(printers, machine._id, entries.length, now)
+      : null;
+    if (waitMs === null) {
+      const minsPerCall = queueData?.mins_per_call_by_machine?.find(
+        (m) => m.assignment_id === machine._id,
+      )?.mins_per_call;
+      if (minsPerCall === undefined) {
+        return [];
+      }
+      waitMs = entries.filter((e) => !e.is_called).length * minsPerCall * 60 * 1000;
+    }
+    return [
+      { name: machine.name, text: waitMs < 60 * 1000 ? 'no wait' : `~${formatDuration(waitMs)}` },
+    ];
+  });
 
   return (
     <Box
@@ -63,14 +89,29 @@ export default function QueueStats() {
               </Box>{' '}
               on the queue.
             </Typography>
-            {eta !== null && (
+            {lineEstimates.length > 0 ? (
               <Typography sx={[t.bodySmall, { mt: 0.5 }]}>
-                Estimated wait time is{' '}
-                <Box component="strong" sx={{ fontWeight: 700, color: 'ink.primary' }}>
-                  ~{eta} minute{eta === 1 ? '' : 's'}
-                </Box>{' '}
-                from the end.
+                Estimated wait to join now:{' '}
+                {lineEstimates.map((line, i) => (
+                  <Box component="span" key={line.name}>
+                    {i > 0 && ' · '}
+                    {line.name}{' '}
+                    <Box component="strong" sx={{ fontWeight: 700, color: 'ink.primary' }}>
+                      {line.text}
+                    </Box>
+                  </Box>
+                ))}
               </Typography>
+            ) : (
+              eta !== null && (
+                <Typography sx={[t.bodySmall, { mt: 0.5 }]}>
+                  Estimated wait time is{' '}
+                  <Box component="strong" sx={{ fontWeight: 700, color: 'ink.primary' }}>
+                    ~{eta} minute{eta === 1 ? '' : 's'}
+                  </Box>{' '}
+                  from the end.
+                </Typography>
+              )
             )}
           </Box>
         </Box>

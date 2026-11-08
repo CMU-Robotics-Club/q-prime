@@ -1,4 +1,12 @@
-import { FormControl, Grid, InputLabel, MenuItem, Select, TextField } from '@mui/material';
+import {
+  FormControl,
+  FormHelperText,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+} from '@mui/material';
 
 export const PRINTER_TYPES = {
   bambu: 'Bambu Lab (X1, H2, P1, A1)',
@@ -18,6 +26,10 @@ export default function PrinterDialogBody(props: {
   setAccessCode: (v: string) => void;
   serial: string;
   setSerial: (v: string) => void;
+  // machine id, or '' for none
+  queueLine: string;
+  setQueueLine: (v: string) => void;
+  machines: { _id: string; name: string }[];
 }) {
   const {
     name,
@@ -30,6 +42,9 @@ export default function PrinterDialogBody(props: {
     setAccessCode,
     serial,
     setSerial,
+    queueLine,
+    setQueueLine,
+    machines,
   } = props;
 
   return (
@@ -62,7 +77,27 @@ export default function PrinterDialogBody(props: {
           </Select>
         </FormControl>
       </Grid>
-      <Grid item xs={12}>
+      <Grid item xs={12} sm={6}>
+        <FormControl variant="standard" fullWidth>
+          <InputLabel id="printer-line-label">Queue line</InputLabel>
+          <Select
+            labelId="printer-line-label"
+            value={queueLine}
+            onChange={(e) => setQueueLine(e.target.value)}
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {machines.map((m) => (
+              <MenuItem key={m._id} value={m._id}>
+                {m.name}
+              </MenuItem>
+            ))}
+          </Select>
+          <FormHelperText>Wait estimates for this line use the printer</FormHelperText>
+        </FormControl>
+      </Grid>
+      <Grid item xs={12} sm={6}>
         <TextField
           label="Host name, IP address or URL"
           placeholder="e.g. rc-bambu-mei.wifi.local.cmu.edu"
