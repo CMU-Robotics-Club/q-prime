@@ -108,7 +108,7 @@ export default function AskQuestion() {
 
   const addQuestionMutation = useMutation(api.home.home_mutate.addQuestion);
   async function callAddQuestionAPI(team_number: number) {
-    // Re-enable Submit however this ends; errors still reach ConvexErrorProvider.
+    // Re-enable the button however this ends; errors still reach ConvexErrorProvider.
     try {
       const result = await addQuestionMutation({
         courseId,
@@ -296,7 +296,7 @@ export default function AskQuestion() {
               disabled={askDisabled}
               sx={{ mt: 3, py: 1.25 }}
             >
-              Submit
+              {isTA ? 'Add to Queue' : 'Join Queue'}
             </OhqButton>
           </Box>
         </CardContent>
