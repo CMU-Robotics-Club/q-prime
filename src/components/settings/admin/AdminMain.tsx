@@ -4,6 +4,7 @@ import ConfigSettings from './ConfigSettings';
 import Locations from './Locations';
 import QueueRejoinSettings from './QueueRejoinSettings';
 import QueueTopicSettings from './QueueTopicSettings';
+import PrinterSettings from './PrinterSettings';
 import TASettings from './TASettings';
 import AccessControlSettings from './AccessControlSettings';
 
@@ -17,6 +18,7 @@ function AdminMain() {
       <ConfigSettings></ConfigSettings>
       <QueueRejoinSettings></QueueRejoinSettings>
       <QueueTopicSettings></QueueTopicSettings>
+      <PrinterSettings></PrinterSettings>
       <Locations></Locations>
       <TASettings></TASettings>
       <AccessControlSettings></AccessControlSettings>

@@ -1,4 +1,5 @@
 import Announcements from './Annoucements';
+import PrinterStatus from './PrinterStatus';
 import QueueStats from './QueueStats';
 import SelfServeNotice from './SelfServeNotice';
 
@@ -8,6 +9,7 @@ function SharedMain() {
       <Announcements />
       <QueueStats />
       <SelfServeNotice />
+      <PrinterStatus />
     </div>
   );
 }

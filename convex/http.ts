@@ -1,4 +1,5 @@
-import { httpRouter } from 'convex/server';
+import { FunctionArgs, httpRouter } from 'convex/server';
+import { ConvexError } from 'convex/values';
 import { httpAction } from './_generated/server';
 import { api, internal } from './_generated/api';
 import { auth } from './auth';
@@ -521,6 +522,162 @@ http.route({
         'Access-Control-Allow-Origin': '*',
       },
     });
+  }),
+});
+
+const PRINTER_CSV_COLUMNS = ['name', 'type', 'host', 'access_code', 'serial'] as const;
+
+function csvCell(value: unknown) {
+  const s = value == null ? '' : String(value);
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+http.route({
+  path: `${API_PREFIX}/download_printers_csv`,
+  method: 'OPTIONS',
+  handler: httpAction(async () => handlePreflight()),
+});
+
+// The course's printers, with access codes, as a CSV to edit and upload again.
+http.route({
+  path: `${API_PREFIX}/download_printers_csv`,
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    const courseId = getCourseIdFromRequest(request);
+    let printers;
+    try {
+      // checks that the caller is an admin
+      printers = await ctx.runQuery(api.printers.getPrinterSettings, { courseId });
+    } catch {
+      return new Response('Only admins can download printers', {
+        status: 403,
+        headers: createCorsHeaders(),
+      });
+    }
+
+    const rows =
+      printers.length > 0
+        ? printers.map((p) => [p.name, p.type, p.host, p.access_code ?? '', p.serial ?? ''])
+        : [
+            ['Mei', 'bambu', 'rc-bambu-mei.wifi.local.cmu.edu', '', ''],
+            ['Canis', 'elegoo', 'rc-centauri-canis.wifi.local.cmu.edu', '', ''],
+          ];
+    const csvContent = [PRINTER_CSV_COLUMNS, ...rows]
+      .map((row) => row.map(csvCell).join(','))
+      .join('\r\n');
+
+    return new Response(csvContent, {
+      status: 200,
+      headers: createCorsHeaders({
+        'Content-Type': 'text/csv',
+        'Content-Disposition': `attachment; filename="printers.csv"`,
+      }),
+    });
+  }),
+});
+
+http.route({
+  path: `${API_PREFIX}/upload_printers_csv`,
+  method: 'OPTIONS',
+  handler: httpAction(async () => handlePreflight()),
+});
+
+// Add or update printers from a CSV with the columns above. Responds with the
+// counts, or 400 and every problem found (nothing is saved then).
+http.route({
+  path: `${API_PREFIX}/upload_printers_csv`,
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    const courseId = getCourseIdFromRequest(request);
+    const parsed = await ctx.runAction(internal.actions.parseCsvNode, {
+      csvText: await (await request.blob()).text(),
+    });
+
+    const rows = (parsed as Record<string, unknown>[]).map((raw) => {
+      // match headers loosely: "Access Code", "access_code", "HOST" ...
+      const cells = new Map(
+        Object.entries(raw).map(([k, val]) => [
+          k.trim().toLowerCase().replace(/\s+/g, '_'),
+          String(val ?? '').trim(),
+        ]),
+      );
+      const optional = (key: string) => cells.get(key) || undefined;
+      return {
+        name: cells.get('name') ?? '',
+        type: cells.get('type') ?? '',
+        host: cells.get('host') ?? cells.get('url') ?? '',
+        access_code: optional('access_code'),
+        serial: optional('serial'),
+      };
+    });
+
+    try {
+      // checks that the caller is an admin
+      const result = await ctx.runMutation(api.printers.importPrinters, { courseId, rows });
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: createCorsHeaders({ 'Content-Type': 'application/json' }),
+      });
+    } catch (error) {
+      const message =
+        error instanceof ConvexError ? String(error.data) : 'Could not import printers';
+      return new Response(message, { status: 400, headers: createCorsHeaders() });
+    }
+  }),
+});
+
+// printer-bridge/ runs next to the backend and calls these on the HTTP actions
+// port directly, so they aren't exposed through nginx. Both need the shared
+// secret: `npx convex env set PRINTER_BRIDGE_SECRET <secret>`; unset disables them.
+function isPrinterBridge(request: Request) {
+  const secret = process.env.PRINTER_BRIDGE_SECRET;
+  return !!secret && request.headers.get('Authorization') === `Bearer ${secret}`;
+}
+
+// The printers to watch, with their access codes.
+http.route({
+  path: `${API_PREFIX}/printer_config`,
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    if (!isPrinterBridge(request)) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+    const printers = await ctx.runQuery(internal.printers.internalGetBridgeConfig, {});
+    return new Response(JSON.stringify({ printers }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }),
+});
+
+// Live status of each printer.
+http.route({
+  path: `${API_PREFIX}/printer_status`,
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!isPrinterBridge(request)) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response('Body must be JSON', { status: 400 });
+    }
+
+    try {
+      // the mutation's validator checks the body's shape
+      await ctx.runMutation(
+        internal.printers.internalUpdatePrinterStatus,
+        body as FunctionArgs<typeof internal.printers.internalUpdatePrinterStatus>,
+      );
+    } catch (error) {
+      return new Response(error instanceof Error ? error.message : String(error), {
+        status: 400,
+      });
+    }
+    return new Response(null, { status: 204 });
   }),
 });
 

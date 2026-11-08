@@ -127,3 +127,6 @@ adminSettings.json
 docker/certbot/
 docker/nginx/host/qprime-locations.conf
 backups/
+
+# printer bridge
+printer-bridge/node_modules

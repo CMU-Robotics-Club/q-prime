@@ -170,6 +170,33 @@ export default defineSchema({
     ])
     .index('by_semester_and_finished_by_and_ta', ['semester_id', 'finished_by', 'ta_id']),
 
+  // Printers shown on the home page. Admins manage them in Settings;
+  // printer-bridge/ reads this list (including access codes) and reports each
+  // printer's live status back. See convex/printers.ts.
+  printers: defineTable({
+    course_id: v.id('courses'),
+    name: v.string(),
+    type: v.union(v.literal('bambu'), v.literal('elegoo')),
+    host: v.string(), // host name or IP address
+    serial: v.optional(v.string()), // Bambu; the bridge reads it from the printer when unset
+    access_code: v.optional(v.string()), // Bambu LAN access code; admins only
+
+    // live status from the bridge; unset until it first reports
+    state: v.optional(
+      v.union(
+        v.literal('idle'),
+        v.literal('preparing'),
+        v.literal('printing'),
+        v.literal('paused'),
+        v.literal('finished'),
+        v.literal('error'),
+        v.literal('offline'),
+      ),
+    ),
+    remaining_sec: v.optional(v.number()), // printer's own estimate, as of status_updated_at
+    status_updated_at: v.optional(v.number()),
+  }).index('by_course', ['course_id']),
+
   // use a table as the actual queue lol
   // each row in the table is a student on the queue, scoped to a semester
   ohq: defineTable({

@@ -1,0 +1,16 @@
+{
+  "name": "qprime-printer-bridge",
+  "private": true,
+  "type": "module",
+  "description": "Reads live status from the club's printers and pushes it to the q-prime Convex backend.",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "mqtt": "^5.16.1",
+    "ws": "^8.22.1"
+  }
+}

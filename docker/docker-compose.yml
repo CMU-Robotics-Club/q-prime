@@ -89,6 +89,28 @@ services:
   # NGINX Reverse Proxy - SSL & Routing
   # Reloads config every 6 hours to pick up renewed certs
   # ===========================================
+  # ===========================================
+  # Printer bridge - live printer status for the home page
+  # ===========================================
+  # Off unless started with `--profile printers`. Gets the printer list (set up
+  # by admins in Settings) from the backend's HTTP actions port over the
+  # internal network and reports status back. See printer-bridge/README.md.
+  printer-bridge:
+    build:
+      context: ../printer-bridge
+    container_name: qprime-printer-bridge
+    restart: unless-stopped
+    profiles: ['printers']
+    environment:
+      - PRINTER_BRIDGE_SECRET=${PRINTER_BRIDGE_SECRET}
+      - CONVEX_SITE_URL=http://convex-backend:3211
+      - HTTP_API_PREFIX=${HTTP_API_PREFIX:-/api}
+    depends_on:
+      convex-backend:
+        condition: service_healthy
+    networks:
+      - qprime-network
+
   nginx-proxy:
     build:
       context: ./nginx

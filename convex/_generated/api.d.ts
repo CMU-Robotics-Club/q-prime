@@ -17,6 +17,7 @@ import type * as home_home_get from "../home/home_get.js";
 import type * as home_home_mutate from "../home/home_mutate.js";
 import type * as http from "../http.js";
 import type * as metrics from "../metrics.js";
+import type * as printers from "../printers.js";
 import type * as settings_settings_get from "../settings/settings_get.js";
 import type * as settings_settings_mutate from "../settings/settings_mutate.js";
 import type * as util_time from "../util/time.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   "home/home_mutate": typeof home_home_mutate;
   http: typeof http;
   metrics: typeof metrics;
+  printers: typeof printers;
   "settings/settings_get": typeof settings_settings_get;
   "settings/settings_mutate": typeof settings_settings_mutate;
   "util/time": typeof util_time;
