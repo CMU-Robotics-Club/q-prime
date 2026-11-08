@@ -59,7 +59,6 @@ const Filter = ({ filteredLocations, filteredTopics, setFilteredLocations, setFi
 
 export default function StudentEntries() {
   const courseId = useCourseId();
-  const userData = useQuery(api.home.home_get.getUserData, { courseId });
   const allStudents = useQuery(api.home.home_get.getAllStudents, { courseId });
 
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -71,22 +70,6 @@ export default function StudentEntries() {
 
     return () => clearInterval(intervalId);
   }, []);
-
-  const [isHelping, setIsHelping] = useState(false);
-  useEffect(() => {
-    if (!allStudents || !userData?.user_id) {
-      return;
-    }
-    setIsHelping(false);
-    for (const student of allStudents) {
-      if (
-        student.status === 'being_helped' &&
-        student.helping_ta!.ta_id === userData.ta_data!.ta_id
-      ) {
-        setIsHelping(true);
-      }
-    }
-  }, [allStudents, userData?.user_id]);
 
   const [tempDisabled, setTempDisabled] = useState(false);
 
@@ -182,7 +165,6 @@ export default function StudentEntries() {
     <ListCard title="Teams" HeaderTailComp={HeaderTail}>
       {filteredStudents.map((student, index) => (
         <StudentEntry
-          isHelping={isHelping}
           tempDisabled={tempDisabled}
           key={student.student_id}
           student={student}

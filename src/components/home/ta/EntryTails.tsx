@@ -18,7 +18,6 @@ import { t } from '../../../themes/styles';
 export default function EntryTails(props) {
   const {
     index,
-    isHelping,
     tempDisabled,
     currentTime,
     showCooldownApproval,
@@ -108,7 +107,7 @@ export default function EntryTails(props) {
       actionElement = (
         <OhqButton
           variant="primary"
-          disabled={isHelping || tempDisabled}
+          disabled={tempDisabled}
           onClick={() =>
             showCooldownApproval ? approveCooldownOverride() : handleClickHelp(index)
           }
@@ -120,11 +119,7 @@ export default function EntryTails(props) {
     case 'waiting':
     default:
       actionElement = (
-        <OhqButton
-          variant="primary"
-          disabled={isHelping || tempDisabled}
-          onClick={() => handleClickHelp(index)}
-        >
+        <OhqButton variant="primary" disabled={tempDisabled} onClick={() => handleClickHelp(index)}>
           Call
         </OhqButton>
       );
