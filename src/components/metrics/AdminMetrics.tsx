@@ -83,6 +83,8 @@ export default function AdminMetrics() {
     ? rankedStudentsData.rankedStudents.map((student) => {
         return {
           ...student,
+          // every team the member submitted for; none on requests from before team numbers
+          teams: student.team_numbers.length > 0 ? student.team_numbers.join(', ') : '—',
           average:
             student.count > 0 ? Math.round((student.timeHelped / student.count) * 10) / 10 : 0,
         };
@@ -99,6 +101,7 @@ export default function AdminMetrics() {
     : [];
 
   const studentCols = [
+    { id: 'teams', label: 'Team', width: 25 },
     { id: 'student_email', label: 'Email', width: 25 },
     { id: 'student_name', label: 'Name', width: 25 },
     { id: 'count', label: 'Num Print Requests', width: 100 },

@@ -181,6 +181,7 @@ function StudentMetricsContent() {
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ minWidth: 150 }}>Date/Time</TableCell>
+                  <TableCell sx={{ minWidth: 70 }}>Team</TableCell>
                   <TableCell sx={{ minWidth: 120 }}>Machine</TableCell>
                   <TableCell sx={{ minWidth: 200 }}>Part</TableCell>
                   <TableCell sx={{ minWidth: 100 }}>Location</TableCell>
@@ -196,6 +197,8 @@ function StudentMetricsContent() {
                   .map((row, i) => (
                     <TableRow hover key={`${row.entry_time}-${i}`}>
                       <TableCell>{formatDateTime(row.entry_time)}</TableCell>
+                      {/* unset on requests from before team numbers */}
+                      <TableCell>{row.team_number ?? '—'}</TableCell>
                       <TableCell sx={{ wordBreak: 'break-word' }}>{row.assignment_name}</TableCell>
                       <TableCell sx={{ wordBreak: 'break-word' }}>{row.question}</TableCell>
                       <TableCell sx={{ wordBreak: 'break-word' }}>{row.location}</TableCell>

@@ -180,6 +180,7 @@ function TAMetricsContent() {
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ minWidth: 150 }}>Date/Time</TableCell>
+                  <TableCell sx={{ minWidth: 70 }}>Team</TableCell>
                   <TableCell sx={{ minWidth: 120 }}>Member</TableCell>
                   <TableCell sx={{ minWidth: 120 }}>Email</TableCell>
                   <TableCell sx={{ minWidth: 120 }}>Machine</TableCell>
@@ -195,6 +196,8 @@ function TAMetricsContent() {
                   .map((row, i) => (
                     <TableRow hover key={`${row.entry_time}-${i}`}>
                       <TableCell>{formatDateTime(row.entry_time)}</TableCell>
+                      {/* unset on requests from before team numbers */}
+                      <TableCell>{row.team_number ?? '—'}</TableCell>
                       <TableCell sx={{ wordBreak: 'break-word' }}>
                         <MuiLink
                           component={Link}

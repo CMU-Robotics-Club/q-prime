@@ -48,6 +48,7 @@ export const getHelpedStudents = query({
         start_date: v.string(),
         end_date: v.string(),
         question: v.string(),
+        team_number: v.optional(v.number()), // unset on requests from before team numbers
       }),
     ),
   }),
@@ -83,6 +84,7 @@ export const getHelpedStudents = query({
           start_date: new Date(help_start_ms).toISOString(),
           end_date: new Date(q.exit_time_ms).toISOString(),
           question: q.question,
+          team_number: q.team_number,
         };
       }),
     );
@@ -498,6 +500,7 @@ export const getRankedStudents = query({
         count: v.number(),
         badCount: v.number(),
         timeHelped: v.number(),
+        team_numbers: v.array(v.number()), // every team the member submitted for
       }),
     ),
   }),
@@ -512,11 +515,17 @@ export const getRankedStudents = query({
       )
       .collect();
 
-    const studentMap: Record<string, { count: number; timeHelped: number; badCount: number }> = {};
+    const studentMap: Record<
+      string,
+      { count: number; timeHelped: number; badCount: number; teams: Set<number> }
+    > = {};
 
     for (const q of questions) {
       if (!studentMap[q.student_id]) {
-        studentMap[q.student_id] = { count: 0, timeHelped: 0, badCount: 0 };
+        studentMap[q.student_id] = { count: 0, timeHelped: 0, badCount: 0, teams: new Set() };
+      }
+      if (q.team_number !== undefined) {
+        studentMap[q.student_id].teams.add(q.team_number);
       }
       studentMap[q.student_id].count++;
       studentMap[q.student_id].timeHelped += q.help_duration_ms / 1000 / 60;
@@ -541,6 +550,7 @@ export const getRankedStudents = query({
           count: stats.count,
           badCount: stats.badCount,
           timeHelped: Math.round(stats.timeHelped * 10) / 10,
+          team_numbers: [...stats.teams].sort((a, b) => a - b),
         };
       }),
     );
@@ -642,6 +652,7 @@ export const getStudentQuestionHistory = query({
       questions: v.array(
         v.object({
           question: v.string(),
+          team_number: v.optional(v.number()), // unset on requests from before team numbers
           assignment_name: v.string(),
           location: v.string(),
           entry_time: v.string(),
@@ -712,6 +723,7 @@ export const getStudentQuestionHistory = query({
 
         return {
           question: q.question,
+          team_number: q.team_number,
           assignment_name: assignment?.name ?? 'Unknown',
           location: q.location,
           entry_time: new Date(q.entry_time_ms).toISOString(),
@@ -761,6 +773,7 @@ export const getTAQuestionHistory = query({
       questions: v.array(
         v.object({
           question: v.string(),
+          team_number: v.optional(v.number()), // unset on requests from before team numbers
           assignment_name: v.string(),
           location: v.string(),
           student_id: v.id('students'),
@@ -835,6 +848,7 @@ export const getTAQuestionHistory = query({
 
         return {
           question: q.question,
+          team_number: q.team_number,
           assignment_name: assignment?.name ?? 'Unknown',
           location: q.location,
           student_id: q.student_id,

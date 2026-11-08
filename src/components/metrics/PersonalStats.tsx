@@ -21,6 +21,7 @@ import { api } from '../../../convex/_generated/api';
 import { useCourseId } from '../../contexts/CourseContext';
 
 interface HelpedStudent {
+  team: string;
   student_email: string;
   name: string;
   timeStart: string;
@@ -29,6 +30,7 @@ interface HelpedStudent {
 }
 
 function createData(
+  team_number: number | undefined,
   student_email: string,
   name: string,
   timeStart: string,
@@ -37,7 +39,9 @@ function createData(
 ): HelpedStudent {
   const timeStartStr = DateTime.fromISO(timeStart).toFormat('MM/dd/yyyy HH:mm');
   const timeEndStr = DateTime.fromISO(timeEnd).toFormat('MM/dd/yyyy HH:mm');
-  return { student_email, name, timeStart: timeStartStr, timeEnd: timeEndStr, question };
+  // unset on requests from before team numbers
+  const team = team_number !== undefined ? String(team_number) : '—';
+  return { team, student_email, name, timeStart: timeStartStr, timeEnd: timeEndStr, question };
 }
 
 export default function PersonalStats() {
@@ -55,6 +59,7 @@ export default function PersonalStats() {
   const helpedStudents = helpedStudentsData
     ? helpedStudentsData.helpedStudents.map((helpedStudent: any) =>
         createData(
+          helpedStudent.team_number,
           helpedStudent.student_email,
           helpedStudent.student_name,
           helpedStudent.start_date,
@@ -108,6 +113,7 @@ export default function PersonalStats() {
               <Table stickyHeader aria-label="sticky table">
                 <TableHead>
                   <TableRow>
+                    <TableCell>Team</TableCell>
                     <TableCell sx={{ minWidth: 125 }}>Email</TableCell>
                     <TableCell sx={{ minWidth: 125 }}>Name</TableCell>
                     <TableCell>Part</TableCell>
@@ -120,6 +126,7 @@ export default function PersonalStats() {
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row, i) => (
                       <TableRow hover key={row.student_email + i}>
+                        <TableCell>{row.team}</TableCell>
                         <TableCell sx={{ wordBreak: 'break-word' }}>{row.student_email}</TableCell>
                         <TableCell sx={{ wordBreak: 'break-word' }}>{row.name}</TableCell>
                         <TableCell sx={{ wordBreak: 'break-word' }}>{row.question}</TableCell>
