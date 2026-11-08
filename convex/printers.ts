@@ -16,7 +16,7 @@ const ACTIVE_STATES: Doc<'printers'>['state'][] = ['preparing', 'printing', 'pau
 // Matches the home page: status older than this is treated as offline.
 const STALE_AFTER_MS = 3 * 60 * 1000;
 // An in-use mark nobody started a job under expires after this. Keep in sync
-// with IN_USE_EXPIRES_MS in src/components/home/shared/PrinterStatus.tsx.
+// with IN_USE_EXPIRES_MS in src/components/home/shared/printerState.ts.
 const IN_USE_EXPIRES_MS = 30 * 60 * 1000;
 
 // Admins can paste a URL or a bare host; keep just the host name or IP.
@@ -275,7 +275,13 @@ export const deletePrinter = mutation({
  * marks right away).
  */
 export const setPrinterInUse = mutation({
-  args: { courseId: v.id('courses'), printerId: v.id('printers'), in_use: v.boolean() },
+  args: {
+    courseId: v.id('courses'),
+    printerId: v.id('printers'),
+    in_use: v.boolean(),
+    // Optional so pages loaded before teams could be attached still work.
+    team_number: v.optional(v.number()),
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     await ensureAuthAndTA(ctx, args.courseId);
@@ -286,7 +292,16 @@ export const setPrinterInUse = mutation({
     if (args.in_use && reporting && ACTIVE_STATES.includes(printer.state)) {
       throw new ConvexError(`${printer.name} is already printing`);
     }
-    await ctx.db.patch(printer._id, { in_use_since: args.in_use ? Date.now() : undefined });
+    if (
+      args.team_number !== undefined &&
+      (!Number.isSafeInteger(args.team_number) || args.team_number < 1)
+    ) {
+      throw new ConvexError('Team number must be a whole number of 1 or more');
+    }
+    await ctx.db.patch(printer._id, {
+      in_use_since: args.in_use ? Date.now() : undefined,
+      in_use_team: args.in_use ? args.team_number : undefined,
+    });
     return null;
   },
 });
@@ -311,6 +326,7 @@ export const getPrinterStatus = query({
         remaining_sec: p.remaining_sec,
         updated_at: p.status_updated_at ?? 0,
         in_use_since: p.in_use_since,
+        in_use_team: p.in_use_team,
       }));
   },
 });
@@ -365,7 +381,7 @@ export const internalUpdatePrinterStatus = internalMutation({
         // mark expired without one
         ...(ACTIVE_STATES.includes(report.state) ||
         (printer.in_use_since !== undefined && now - printer.in_use_since > IN_USE_EXPIRES_MS)
-          ? { in_use_since: undefined }
+          ? { in_use_since: undefined, in_use_team: undefined }
           : {}),
       });
     }

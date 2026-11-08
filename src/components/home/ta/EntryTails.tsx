@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Stack, Typography } from '@mui/material';
 import { Chat, Delete } from '@mui/icons-material';
 
-import { useQuery } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { Doc } from '../../../../convex/_generated/dataModel';
 import { useCourseId } from '../../../contexts/CourseContext';
@@ -13,6 +13,7 @@ import HelpTimer from '../../common/timer/HelpTimer';
 import OverflowMenu, { OverflowMenuItem } from '../../common/menus/OverflowMenu';
 import DialogShell from '../../common/dialogs/DialogShell';
 import MessageDialog from './dialogs/MessageDialog';
+import AssignPrinterDialog from './dialogs/AssignPrinterDialog';
 import { t } from '../../../themes/styles';
 
 export default function EntryTails(props) {
@@ -34,6 +35,27 @@ export default function EntryTails(props) {
 
   const [openMessage, setOpenMessage] = useState(false);
   const [openRemoveConfirm, setOpenRemoveConfirm] = useState(false);
+  const [openAssignPrinter, setOpenAssignPrinter] = useState(false);
+
+  // With printers set up, Done asks which printer the team is going to.
+  const printers = useQuery(api.printers.getPrinterStatus, { courseId }) ?? [];
+  const setPrinterInUse = useMutation(api.printers.setPrinterInUse);
+  const teamLabel =
+    student.team_number !== undefined ? `Team ${student.team_number}` : student.student_name;
+  const handleDone = () => {
+    if (printers.length > 0) {
+      setOpenAssignPrinter(true);
+    } else {
+      removeStudent(index, true);
+    }
+  };
+  const handleAssignPrinter = async (printerId) => {
+    // Mark the printer first: if someone just took it, the team stays called
+    // and the officer can pick another.
+    await setPrinterInUse({ courseId, printerId, in_use: true, team_number: student.team_number });
+    setOpenAssignPrinter(false);
+    await removeStudent(index, true);
+  };
 
   const status = student.status;
   const isOwnHelp =
@@ -75,11 +97,7 @@ export default function EntryTails(props) {
             <OhqButton variant="ghost" disabled={tempDisabled} onClick={() => handleCancel(index)}>
               Cancel
             </OhqButton>
-            <OhqButton
-              variant="primary"
-              disabled={tempDisabled}
-              onClick={() => removeStudent(index, true)}
-            >
+            <OhqButton variant="primary" disabled={tempDisabled} onClick={handleDone}>
               Done
             </OhqButton>
           </>
@@ -138,6 +156,17 @@ export default function EntryTails(props) {
         {overflowItems.length > 0 && <OverflowMenu items={overflowItems} />}
       </Stack>
       <MessageDialog isOpen={openMessage} onClose={() => setOpenMessage(false)} student={student} />
+      <AssignPrinterDialog
+        open={openAssignPrinter}
+        teamLabel={teamLabel}
+        printers={printers}
+        onAssign={handleAssignPrinter}
+        onDoneWithoutPrinter={() => {
+          setOpenAssignPrinter(false);
+          removeStudent(index, true);
+        }}
+        onClose={() => setOpenAssignPrinter(false)}
+      />
       <DialogShell
         open={openRemoveConfirm}
         onClose={() => setOpenRemoveConfirm(false)}

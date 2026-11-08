@@ -197,8 +197,9 @@ export default defineSchema({
     status_updated_at: v.optional(v.number()),
 
     // Set when an officer sends a team to this printer; cleared when the
-    // printer starts a job or an officer unmarks it.
+    // printer starts a job, after 30 minutes without one, or by an officer.
     in_use_since: v.optional(v.number()),
+    in_use_team: v.optional(v.number()), // the team sent to it; unset on older marks
   }).index('by_course', ['course_id']),
 
   // use a table as the actual queue lol
