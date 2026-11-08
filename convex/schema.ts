@@ -195,6 +195,10 @@ export default defineSchema({
     ),
     remaining_sec: v.optional(v.number()), // printer's own estimate, as of status_updated_at
     status_updated_at: v.optional(v.number()),
+
+    // Set when an officer sends a team to this printer; cleared when the
+    // printer starts a job or an officer unmarks it.
+    in_use_since: v.optional(v.number()),
   }).index('by_course', ['course_id']),
 
   // use a table as the actual queue lol

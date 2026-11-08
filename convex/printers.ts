@@ -1,7 +1,7 @@
 import { ConvexError, v } from 'convex/values';
 import { internalMutation, internalQuery, mutation, MutationCtx, query } from './_generated/server';
 import { Doc, Id } from './_generated/dataModel';
-import { ensureAuthAndAdmin } from './common';
+import { ensureAuthAndAdmin, ensureAuthAndTA } from './common';
 import schema from './schema';
 
 // Printers are set up by admins in Settings. printer-bridge/ (on the server,
@@ -9,6 +9,15 @@ import schema from './schema';
 // route, watches each printer, and reports status through /printer_status.
 
 const fields = schema.tables.printers.validator.fields;
+
+// A printer in one of these states has a job, so it can't be marked in use,
+// and reporting one clears the mark.
+const ACTIVE_STATES: Doc<'printers'>['state'][] = ['preparing', 'printing', 'paused'];
+// Matches the home page: status older than this is treated as offline.
+const STALE_AFTER_MS = 3 * 60 * 1000;
+// An in-use mark nobody started a job under expires after this. Keep in sync
+// with IN_USE_EXPIRES_MS in src/components/home/shared/PrinterStatus.tsx.
+const IN_USE_EXPIRES_MS = 30 * 60 * 1000;
 
 // Admins can paste a URL or a bare host; keep just the host name or IP.
 function normalizeHost(input: string) {
@@ -260,7 +269,31 @@ export const deletePrinter = mutation({
 });
 
 /**
- * Each printer's state and time left, for the home page.
+ * Mark a printer in use when an officer sends a team to it, or unmark it. The
+ * mark clears itself once the printer starts a job, or after 30 minutes
+ * without one (see internalUpdatePrinterStatus; the home page hides expired
+ * marks right away).
+ */
+export const setPrinterInUse = mutation({
+  args: { courseId: v.id('courses'), printerId: v.id('printers'), in_use: v.boolean() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ensureAuthAndTA(ctx, args.courseId);
+    const printer = await getPrinterInCourse(ctx, args.courseId, args.printerId);
+    const reporting =
+      printer.status_updated_at !== undefined &&
+      Date.now() - printer.status_updated_at < STALE_AFTER_MS;
+    if (args.in_use && reporting && ACTIVE_STATES.includes(printer.state)) {
+      throw new ConvexError(`${printer.name} is already printing`);
+    }
+    await ctx.db.patch(printer._id, { in_use_since: args.in_use ? Date.now() : undefined });
+    return null;
+  },
+});
+
+/**
+ * Each printer's state, time left, and whether an officer marked it in use,
+ * for the home page.
  */
 export const getPrinterStatus = query({
   args: { courseId: v.id('courses') },
@@ -277,6 +310,7 @@ export const getPrinterStatus = query({
         state: p.state ?? 'offline',
         remaining_sec: p.remaining_sec,
         updated_at: p.status_updated_at ?? 0,
+        in_use_since: p.in_use_since,
       }));
   },
 });
@@ -327,6 +361,12 @@ export const internalUpdatePrinterStatus = internalMutation({
         state: report.state,
         remaining_sec: report.remaining_sec,
         status_updated_at: now,
+        // the team the printer was marked for has started its job, or the
+        // mark expired without one
+        ...(ACTIVE_STATES.includes(report.state) ||
+        (printer.in_use_since !== undefined && now - printer.in_use_since > IN_USE_EXPIRES_MS)
+          ? { in_use_since: undefined }
+          : {}),
       });
     }
     return null;
