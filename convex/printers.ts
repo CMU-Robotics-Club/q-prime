@@ -111,6 +111,7 @@ export const getPrinterSettings = query({
         host: p.host,
         assignment_id: p.assignment_id,
         assignment_name: p.assignment_id ? lines.get(p.assignment_id) : undefined,
+        hidden: p.hidden ?? false,
         serial: p.serial,
         access_code: p.access_code,
         state: p.state,
@@ -171,7 +172,10 @@ async function resolveQueueLine(
 async function updatePrinterSettings(
   ctx: MutationCtx,
   printer: Doc<'printers'>,
-  settings: ReturnType<typeof printerSettings> & { assignment_id?: Id<'assignments'> },
+  settings: ReturnType<typeof printerSettings> & {
+    assignment_id?: Id<'assignments'>;
+    hidden?: boolean;
+  },
 ) {
   const reconnects =
     settings.type !== printer.type ||
@@ -193,17 +197,20 @@ const printerArgs = {
   serial: v.optional(v.string()),
   access_code: v.optional(v.string()),
   assignment_id: v.optional(v.union(v.id('assignments'), v.null())),
+  // undefined keeps the current setting (pages from before hiding existed)
+  hidden: v.optional(v.boolean()),
 };
 
 export const createPrinter = mutation({
   args: { courseId: v.id('courses'), ...printerArgs },
   returns: v.null(),
-  handler: async (ctx, { courseId, assignment_id, ...input }) => {
+  handler: async (ctx, { courseId, assignment_id, hidden, ...input }) => {
     await ensureAuthAndAdmin(ctx, courseId);
     await ctx.db.insert('printers', {
       course_id: courseId,
       ...printerSettings(input),
       assignment_id: await resolveQueueLine(ctx, courseId, assignment_id),
+      hidden: hidden ?? false,
     });
     return null;
   },
@@ -216,12 +223,13 @@ export const createPrinter = mutation({
 export const updatePrinter = mutation({
   args: { courseId: v.id('courses'), printerId: v.id('printers'), ...printerArgs },
   returns: v.null(),
-  handler: async (ctx, { courseId, printerId, assignment_id, ...input }) => {
+  handler: async (ctx, { courseId, printerId, assignment_id, hidden, ...input }) => {
     await ensureAuthAndAdmin(ctx, courseId);
     const printer = await getPrinterInCourse(ctx, courseId, printerId);
     await updatePrinterSettings(ctx, printer, {
       ...printerSettings(input, printer),
       assignment_id: await resolveQueueLine(ctx, courseId, assignment_id, printer),
+      hidden: hidden ?? printer.hidden,
     });
     return null;
   },
@@ -243,6 +251,7 @@ export const importPrinters = mutation({
         serial: v.optional(v.string()),
         access_code: v.optional(v.string()),
         queue_line: v.optional(v.string()), // a machine's name; blank keeps the current line
+        hidden: v.optional(v.string()), // yes/no; blank keeps the current setting
       }),
     ),
   },
@@ -269,7 +278,10 @@ export const importPrinters = mutation({
     const seen = new Set<string>();
     const planned: {
       current?: Doc<'printers'>;
-      settings: ReturnType<typeof printerSettings> & { assignment_id?: Id<'assignments'> };
+      settings: ReturnType<typeof printerSettings> & {
+        assignment_id?: Id<'assignments'>;
+        hidden?: boolean;
+      };
     }[] = [];
     args.rows.forEach((row, i) => {
       try {
@@ -287,12 +299,22 @@ export const importPrinters = mutation({
         if (line && !machine_by_name.has(line)) {
           throw new ConvexError(`No queue line named "${row.queue_line!.trim()}"`);
         }
+        const hiddenCell = row.hidden?.trim().toLowerCase();
+        let hidden = current?.hidden ?? false;
+        if (hiddenCell && ['yes', 'y', 'true', '1', 'x'].includes(hiddenCell)) {
+          hidden = true;
+        } else if (hiddenCell && ['no', 'n', 'false', '0'].includes(hiddenCell)) {
+          hidden = false;
+        } else if (hiddenCell) {
+          throw new ConvexError('Hidden must be "yes" or "no"');
+        }
         const input = { ...row, type: type.startsWith('bambu') ? 'bambu' : 'elegoo' } as const;
         planned.push({
           current,
           settings: {
             ...printerSettings(input, current),
             assignment_id: line ? machine_by_name.get(line) : current?.assignment_id,
+            hidden,
           },
         });
       } catch (error) {
@@ -387,6 +409,8 @@ export const getPrinterStatus = query({
         updated_at: p.status_updated_at ?? 0,
         in_use_since: p.in_use_since,
         in_use_team: p.in_use_team,
+        // left off the queue page, but still used for wait estimates
+        hidden: p.hidden ?? false,
         // for wait estimates (src/components/home/shared/printerState.ts)
         assignment_id: p.assignment_id,
         job_sec: p.job_sec,

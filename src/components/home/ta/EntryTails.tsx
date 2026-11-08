@@ -38,7 +38,10 @@ export default function EntryTails(props) {
   const [openAssignPrinter, setOpenAssignPrinter] = useState(false);
 
   // With printers set up, Done asks which printer the team is going to.
-  const printers = useQuery(api.printers.getPrinterStatus, { courseId }) ?? [];
+  // Printers an admin hid from the queue page aren't offered.
+  const printers = (useQuery(api.printers.getPrinterStatus, { courseId }) ?? []).filter(
+    (p) => !p.hidden,
+  );
   const setPrinterInUse = useMutation(api.printers.setPrinterInUse);
   const teamLabel =
     student.team_number !== undefined ? `Team ${student.team_number}` : student.student_name;

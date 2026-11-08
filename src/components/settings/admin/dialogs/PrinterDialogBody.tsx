@@ -1,5 +1,7 @@
 import {
+  Checkbox,
   FormControl,
+  FormControlLabel,
   FormHelperText,
   Grid,
   InputLabel,
@@ -30,6 +32,8 @@ export default function PrinterDialogBody(props: {
   queueLine: string;
   setQueueLine: (v: string) => void;
   machines: { _id: string; name: string }[];
+  hidden: boolean;
+  setHidden: (v: boolean) => void;
 }) {
   const {
     name,
@@ -45,6 +49,8 @@ export default function PrinterDialogBody(props: {
     queueLine,
     setQueueLine,
     machines,
+    hidden,
+    setHidden,
   } = props;
 
   return (
@@ -107,6 +113,15 @@ export default function PrinterDialogBody(props: {
           value={host}
           onChange={(e) => setHost(e.target.value)}
         />
+      </Grid>
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={<Checkbox checked={hidden} onChange={(e) => setHidden(e.target.checked)} />}
+          label="Hide on the queue page"
+        />
+        <FormHelperText sx={{ mt: -0.5 }}>
+          Still watched, and still used for its queue line's wait estimates.
+        </FormHelperText>
       </Grid>
       {type === 'bambu' && (
         <>

@@ -17,11 +17,12 @@ import { useCourseId } from '../../../contexts/CourseContext';
 import { t, s } from '../../../themes/styles';
 
 // Each printer's state and, while it's printing, when it will be done. Live
-// status comes from printer-bridge/; hidden when no printers report. Officers
-// click a free printer to mark it in use for the team they're sending to it.
+// status comes from printer-bridge/; hidden when no printers report. Printers
+// an admin hid aren't shown. Officers click a free printer to mark it in use
+// for the team they're sending to it.
 export default function PrinterStatus() {
   const courseId = useCourseId();
-  const printers = useQuery(api.printers.getPrinterStatus, { courseId });
+  const printers = useQuery(api.printers.getPrinterStatus, { courseId })?.filter((p) => !p.hidden);
   const userData = useQuery(api.home.home_get.getUserData, { courseId });
   const isOfficer = userData?.user_kind === 'TA';
   const setInUse = useMutation(api.printers.setPrinterInUse);

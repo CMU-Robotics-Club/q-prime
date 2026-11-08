@@ -50,6 +50,7 @@ export default function PrinterSettings() {
   const [accessCode, setAccessCode] = useState('');
   const [serial, setSerial] = useState('');
   const [queueLine, setQueueLine] = useState('');
+  const [hidden, setHidden] = useState(false);
 
   const selected = printers.find((p) => p._id === selectedId);
 
@@ -60,6 +61,7 @@ export default function PrinterSettings() {
     setAccessCode('');
     setSerial('');
     setQueueLine(machines.length === 1 ? machines[0]._id : '');
+    setHidden(false);
     setOpenAdd(true);
   };
 
@@ -71,6 +73,7 @@ export default function PrinterSettings() {
     setAccessCode(printer.access_code ?? '');
     setSerial(printer.serial ?? '');
     setQueueLine(printer.assignment_id ?? '');
+    setHidden(printer.hidden);
     setOpenEdit(true);
   };
 
@@ -137,6 +140,7 @@ export default function PrinterSettings() {
     serial: type === 'bambu' ? serial : undefined,
     access_code: type === 'bambu' && accessCode !== '' ? accessCode : undefined,
     assignment_id: queueLine === '' ? null : (queueLine as Id<'assignments'>),
+    hidden,
   });
 
   const createPrinterMutation = useMutation(api.printers.createPrinter);
@@ -171,6 +175,8 @@ export default function PrinterSettings() {
       queueLine={queueLine}
       setQueueLine={setQueueLine}
       machines={machines}
+      hidden={hidden}
+      setHidden={setHidden}
     />
   );
 
@@ -196,6 +202,7 @@ export default function PrinterSettings() {
                 <Typography sx={{ fontSize: 13, color: 'ink.secondary' }}>
                   {TYPE_LABELS[printer.type]}
                   {printer.assignment_name ? ` · ${printer.assignment_name}` : ' · no queue line'}
+                  {printer.hidden && ' · hidden'}
                 </Typography>
               </TableCell>
               <TableCell align="left" sx={{ wordBreak: 'break-word' }}>

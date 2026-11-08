@@ -181,6 +181,9 @@ export default defineSchema({
     // the queue line (machine) this printer serves; wait estimates for that
     // line use it. Unset: not used for estimates.
     assignment_id: v.optional(v.id('assignments')),
+    // left off the queue page (Printers card, Done's printer list); still
+    // watched and still used for wait estimates
+    hidden: v.optional(v.boolean()),
     serial: v.optional(v.string()), // Bambu; the bridge reads it from the printer when unset
     access_code: v.optional(v.string()), // Bambu LAN access code; admins only
 

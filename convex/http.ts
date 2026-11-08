@@ -532,6 +532,7 @@ const PRINTER_CSV_COLUMNS = [
   'access_code',
   'serial',
   'queue_line',
+  'hidden',
 ] as const;
 
 function csvCell(value: unknown) {
@@ -571,10 +572,11 @@ http.route({
             p.access_code ?? '',
             p.serial ?? '',
             p.assignment_name ?? '',
+            p.hidden ? 'yes' : 'no',
           ])
         : [
-            ['Mei', 'bambu', 'rc-bambu-mei.wifi.local.cmu.edu', '', '', '3D Printer'],
-            ['Canis', 'elegoo', 'rc-centauri-canis.wifi.local.cmu.edu', '', '', '3D Printer'],
+            ['Mei', 'bambu', 'rc-bambu-mei.wifi.local.cmu.edu', '', '', '3D Printer', 'no'],
+            ['Canis', 'elegoo', 'rc-centauri-canis.wifi.local.cmu.edu', '', '', '3D Printer', 'no'],
           ];
     const csvContent = [PRINTER_CSV_COLUMNS, ...rows]
       .map((row) => row.map(csvCell).join(','))
@@ -623,6 +625,7 @@ http.route({
         access_code: optional('access_code'),
         serial: optional('serial'),
         queue_line: optional('queue_line') ?? optional('line') ?? optional('machine'),
+        hidden: optional('hidden'),
       };
     });
 
